@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DraftBox - Game Creator</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+</head>
+<body>
+  <div id="app">
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <h1>🎮 DraftBox</h1>
+        <span class="subtitle">Game Creator</span>
+      </div>
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" data-tab="editor">
+          <span class="tab-icon">🎨</span>
+          <span class="tab-label">Pixel Editor</span>
+        </button>
+        <button class="tab-btn" data-tab="code">
+          <span class="tab-icon">💻</span>
+          <span class="tab-label">Code Editor</span>
+        </button>
+        <button class="tab-btn" data-tab="scene">
+          <span class="tab-icon">🎬</span>
+          <span class="tab-label">Scene</span>
+        </button>
+        <button class="tab-btn" data-tab="docs">
+          <span class="tab-icon">📖</span>
+          <span class="tab-label">Docs</span>
+        </button>
+      </div>
+      <div class="sidebar-footer">
+        <button id="runBtn" class="btn-run" title="Run Game (Ctrl+Enter)">
+          ▶ Run
+        </button>
+        <button id="stopBtn" class="btn-stop" title="Stop Game">
+          ■ Stop
+        </button>
+      </div>
+    </nav>
+
+    <main id="main-content">
+      <div id="tab-editor" class="tab-content active">
+        <div class="pixel-editor-container">
+          <div class="editor-header">
+            <h2>Pixel Editor</h2>
+            <div class="sprite-controls">
+              <input type="text" id="spriteName" placeholder="sprite_name" value="player">
+              <button id="saveSpriteBtn">💾 Save Sprite</button>
+              <button id="exportSpriteBtn">📤 Export PNG</button>
+            </div>
+          </div>
+          <div class="pixel-editor-body">
+            <div class="editor-left">
+              <div class="toolbar">
+                <input type="color" id="colorPicker" value="#e94560">
+                <button id="brushBtn" class="tool-btn active" title="Brush">✏️</button>
+                <button id="eraserBtn" class="tool-btn" title="Eraser">🧹</button>
+                <button id="lineBtn" class="tool-btn" title="Line">📏</button>
+                <button id="fillBtn" class="tool-btn" title="Fill">🪣</button>
+                <button id="clearBtn" class="tool-btn" title="Clear">🗑️</button>
+                <label class="tool-label">
+                  Size:
+                  <input type="number" id="brushSize" value="1" min="1" max="10">
+                </label>
+                <label class="tool-label">
+                  Grid:
+                  <input type="checkbox" id="showGrid" checked>
+                </label>
+              </div>
+              <div class="palette" id="palette"></div>
+              <div class="canvas-wrapper">
+                <canvas id="pixelCanvas" width="512" height="512"></canvas>
+              </div>
+              <div class="canvas-info">Click/drag to draw • Right-click to pick color • Scroll to zoom</div>
+            </div>
+            <div class="editor-right">
+              <h3>Sprites</h3>
+              <div id="spriteList" class="sprite-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-code" class="tab-content">
+        <div class="code-editor-container">
+          <div class="editor-header">
+            <h2>Code Editor</h2>
+            <div class="code-controls">
+              <span class="file-name" id="currentFileName">game.js</span>
+              <input type="text" id="sourceNameInput" placeholder="source_name" value="my_game" class="source-name-input">
+              <button id="saveSourceBtn" title="Save source (Ctrl+S)">💾 Save</button>
+              <button id="newSourceBtn" title="New source">📄 New</button>
+              <button id="formatBtn" title="Format Code">🔧</button>
+            </div>
+          </div>
+          <div class="code-editor-body">
+            <div class="code-editor-wrapper">
+              <textarea id="codeEditor"></textarea>
+            </div>
+            <div class="code-sidebar">
+              <h3>Game API</h3>
+              <div class="api-ref">
+                <div class="api-item">
+                  <code>update(dt)</code>
+                  <span>Called every frame. dt = delta time in seconds.</span>
+                </div>
+                <div class="api-item">
+                  <code>draw(ctx)</code>
+                  <span>Called every frame to render.</span>
+                </div>
+                <div class="api-item">
+                  <code>init()</code>
+                  <span>Called once at game start.</span>
+                </div>
+                <div class="api-item">
+                  <code>keys</code>
+                  <span>Object with keyboard state (<code>keys.Space</code>, <code>keys.ArrowLeft</code>)</span>
+                </div>
+                <div class="api-item">
+                  <code>mouse</code>
+                  <span>Mouse state (<code>mouse.x</code>, <code>mouse.y</code>, <code>mouse.left</code>)</span>
+                </div>
+                <div class="api-item">
+                  <code>sprites</code>
+                  <span>Object with sprite canvases by name.</span>
+                </div>
+                <div class="api-item">
+                  <code>audio(name)</code>
+                  <span>Play a sound by name.</span>
+                </div>
+                <div class="api-item">
+                  <code>rand(min, max)</code>
+                  <span>Random float between min and max.</span>
+                </div>
+                <div class="api-item">
+                  <code>clamp(val, min, max)</code>
+                  <span>Clamp value between min and max.</span>
+                </div>
+                <div class="api-item">
+                  <code>rectCollide(a, b)</code>
+                  <span>AABB collision test between two rects <code>{x,y,w,h}</code>.</span>
+                </div>
+                <div class="api-item">
+                  <code>canvas</code>
+                  <span>The game canvas element.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-scene" class="tab-content">
+        <div class="scene-container">
+          <div class="editor-header">
+            <h2>Scene</h2>
+            <div class="scene-controls">
+              <button id="sceneRunBtn" class="btn-run">▶ Run</button>
+              <button id="sceneStopBtn" class="btn-stop">■ Stop</button>
+              <button id="sceneResetBtn">↺ Reset</button>
+            </div>
+          </div>
+          <div class="scene-body">
+            <div class="scene-canvas-wrapper">
+              <canvas id="sceneCanvas" width="960" height="540"></canvas>
+            </div>
+            <div class="scene-output">
+              <h3>Console</h3>
+              <div id="consoleOutput" class="console-output"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-docs" class="tab-content">
+        <div class="docs-container">
+          <div class="docs-subtabs">
+            <button class="docs-subtab active" data-subtab="documentation">📖 Documentation</button>
+            <button class="docs-subtab" data-subtab="sources">📁 Sources</button>
+          </div>
+          <div id="docs-subtab-documentation" class="docs-subtab-content active">
+            <div class="editor-header">
+              <h2>Documentation</h2>
+              <input type="text" id="docsSearch" placeholder="Search docs..." class="docs-search">
+            </div>
+            <div class="docs-body">
+              <nav class="docs-nav" id="docsNav"></nav>
+              <div class="docs-content" id="docsContent"></div>
+            </div>
+          </div>
+          <div id="docs-subtab-sources" class="docs-subtab-content">
+            <div class="sources-container">
+              <div class="editor-header">
+                <h2>Sources</h2>
+                <button id="refreshSourcesBtn" title="Refresh list">🔄 Refresh</button>
+              </div>
+              <div id="sourcesList" class="sources-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
+  <script src="pixel-editor.js"></script>
+  <script src="draftbox-lib.js"></script>
+  <script src="code-editor.js"></script>
+  <script src="scene-runner.js"></script>
+  <script src="demos.js"></script>
+  <script src="docs-content.js"></script>
+  <script src="sources-panel.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
