@@ -27,11 +27,14 @@ const DocsContent = {
   render() {
     const nav = document.getElementById('docsNav');
     const content = document.getElementById('docsContent');
+    const select = document.getElementById('docsNavSelect');
 
     nav.innerHTML = '';
+    select.innerHTML = '';
     this.sections.forEach((sec, i) => {
+      const label = sec.title.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       const a = document.createElement('a');
-      a.textContent = sec.title.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      a.textContent = label;
       a.href = '#';
       a.dataset.section = sec.id;
       a.addEventListener('click', (e) => {
@@ -39,6 +42,15 @@ const DocsContent = {
         this.showSection(sec.id);
       });
       nav.appendChild(a);
+
+      const opt = document.createElement('option');
+      opt.value = sec.id;
+      opt.textContent = label;
+      select.appendChild(opt);
+    });
+
+    select.addEventListener('change', () => {
+      this.showSection(select.value);
     });
 
     if (this.sections.length > 0) {
@@ -53,6 +65,9 @@ const DocsContent = {
     document.querySelectorAll('#docsNav a').forEach(a => a.classList.remove('active'));
     const navItem = document.querySelector(`#docsNav a[data-section="${id}"]`);
     if (navItem) navItem.classList.add('active');
+
+    const select = document.getElementById('docsNavSelect');
+    if (select) select.value = id;
 
     document.getElementById('docsContent').innerHTML = sec.content;
     document.getElementById('docsContent').scrollTop = 0;

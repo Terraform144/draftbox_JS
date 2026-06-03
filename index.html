@@ -44,6 +44,8 @@
       </div>
     </nav>
 
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle menu">☰</button>
     <main id="main-content">
       <div id="tab-editor" class="tab-content active">
         <div class="pixel-editor-container">
@@ -189,6 +191,7 @@
               <h2>Documentation</h2>
               <input type="text" id="docsSearch" placeholder="Search docs..." class="docs-search">
             </div>
+            <select id="docsNavSelect" class="docs-nav-select"></select>
             <div class="docs-body">
               <nav class="docs-nav" id="docsNav"></nav>
               <div class="docs-content" id="docsContent"></div>

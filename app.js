@@ -17,7 +17,23 @@ const App = {
     SourcesPanel.init();
 
     this.initKeyboardShortcuts();
+    this.initMobileSidebar();
     console.log('DraftBox initialized.');
+  },
+
+  initMobileSidebar() {
+    const toggle = document.getElementById('sidebarToggle');
+    const overlay = document.getElementById('sidebarOverlay');
+    const app = document.getElementById('app');
+    toggle.addEventListener('click', () => {
+      app.classList.toggle('sidebar-open');
+    });
+    overlay.addEventListener('click', () => {
+      app.classList.remove('sidebar-open');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => app.classList.remove('sidebar-open'));
+    });
   },
 
   initTabs() {
