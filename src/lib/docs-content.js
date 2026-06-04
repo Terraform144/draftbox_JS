@@ -1064,28 +1064,3 @@ export const sections = [
   { id: 'api-ref', title: 'DraftBox API Reference', content: apiRef },
   { id: 'demos', title: '🎮 Retro Game Demos', content: demos },
 ];
-
-export function bindDemoButtons(onRun) {
-  document.querySelectorAll('.demo-play-btn').forEach(btn => {
-    btn.removeEventListener('click', btn._demoHandler);
-    btn._demoHandler = () => {
-      const i = parseInt(btn.dataset.demo);
-      if (onRun) onRun(i);
-    };
-    btn.addEventListener('click', btn._demoHandler);
-  });
-}
-
-export function onDocsSectionChange(container, onRun) {
-  bindDemoButtons(onRun);
-}
-
-export function bindSearch(searchInput, navContainer) {
-  searchInput.addEventListener('input', () => {
-    const q = searchInput.value.toLowerCase();
-    navContainer.querySelectorAll('a').forEach(a => {
-      const match = a.textContent.toLowerCase().includes(q);
-      a.style.display = match ? 'block' : 'none';
-    });
-  });
-}

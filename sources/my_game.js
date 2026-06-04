@@ -2,7 +2,7 @@
 // Use Game.Stage, Game.Shape, Game.Tween, etc.
 
 const stage = new Game.Stage(canvas);
-stage.clearColor = '#1a1a2e';
+stage.clearColor = '#1a1a2e';//
 
 const player = new Game.Shape();
 player.graphics.fillStyle('#e94560').fillRect(0, 0, 32, 32);

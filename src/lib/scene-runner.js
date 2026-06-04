@@ -5,25 +5,26 @@ const sceneRunner = {
   rafId: null,
   lastTime: 0,
   userState: null,
+  keys: null,
+  mouse: null,
+  onLog: null,
+  onClear: null,
 
-  init(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.console = document.getElementById('consoleOutput');
-
-    // Run handled by React component via props
-    document.getElementById('sceneStopBtn').addEventListener('click', () => this.stop());
-    document.getElementById('sceneResetBtn').addEventListener('click', () => this.reset());
+  init(canvas, opts = {}) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.onLog = opts.onLog || (() => {});
+    this.onClear = opts.onClear || (() => {});
 
     document.addEventListener('keydown', (e) => {
       if (this.running) {
-        if (sceneRunner.keys) sceneRunner.keys[e.code] = true;
-        if (sceneRunner.mouse) sceneRunner.mouse[e.code] = true;
+        if (this.keys) this.keys[e.code] = true;
+        if (this.mouse) this.mouse[e.code] = true;
       }
     });
     document.addEventListener('keyup', (e) => {
-      if (this.running && sceneRunner.keys) {
-        sceneRunner.keys[e.code] = false;
+      if (this.running && this.keys) {
+        this.keys[e.code] = false;
       }
     });
     this.canvas.addEventListener('mousemove', (e) => {
@@ -31,31 +32,22 @@ const sceneRunner = {
       const rect = this.canvas.getBoundingClientRect();
       const scaleX = this.canvas.width / rect.width;
       const scaleY = this.canvas.height / rect.height;
-      if (sceneRunner.mouse) {
-        sceneRunner.mouse.x = (e.clientX - rect.left) * scaleX;
-        sceneRunner.mouse.y = (e.clientY - rect.top) * scaleY;
+      if (this.mouse) {
+        this.mouse.x = (e.clientX - rect.left) * scaleX;
+        this.mouse.y = (e.clientY - rect.top) * scaleY;
       }
     });
     this.canvas.addEventListener('mousedown', (e) => {
-      if (this.running && sceneRunner.mouse) {
-        sceneRunner.mouse.left = true;
+      if (this.running && this.mouse) {
+        this.mouse.left = true;
       }
     });
     this.canvas.addEventListener('mouseup', (e) => {
-      if (this.running && sceneRunner.mouse) {
-        sceneRunner.mouse.left = false;
+      if (this.running && this.mouse) {
+        this.mouse.left = false;
       }
     });
 
-    // Touch controls: bind d-pad and action buttons
-    this.bindTouchControl('touch-up', 'ArrowUp');
-    this.bindTouchControl('touch-down', 'ArrowDown');
-    this.bindTouchControl('touch-left', 'ArrowLeft');
-    this.bindTouchControl('touch-right', 'ArrowRight');
-    this.bindTouchControl('touch-a', 'Space');
-    this.bindTouchControl('touch-b', 'KeyX');
-
-    // Canvas touch → mouse left click
     this.canvas.addEventListener('touchstart', (e) => {
       if (!this.running) return;
       e.preventDefault();
@@ -63,10 +55,10 @@ const sceneRunner = {
       const rect = this.canvas.getBoundingClientRect();
       const scaleX = this.canvas.width / rect.width;
       const scaleY = this.canvas.height / rect.height;
-      if (sceneRunner.mouse) {
-        sceneRunner.mouse.x = (touch.clientX - rect.left) * scaleX;
-        sceneRunner.mouse.y = (touch.clientY - rect.top) * scaleY;
-        sceneRunner.mouse.left = true;
+      if (this.mouse) {
+        this.mouse.x = (touch.clientX - rect.left) * scaleX;
+        this.mouse.y = (touch.clientY - rect.top) * scaleY;
+        this.mouse.left = true;
       }
     }, { passive: false });
     this.canvas.addEventListener('touchmove', (e) => {
@@ -76,62 +68,26 @@ const sceneRunner = {
       const rect = this.canvas.getBoundingClientRect();
       const scaleX = this.canvas.width / rect.width;
       const scaleY = this.canvas.height / rect.height;
-      if (sceneRunner.mouse) {
-        sceneRunner.mouse.x = (touch.clientX - rect.left) * scaleX;
-        sceneRunner.mouse.y = (touch.clientY - rect.top) * scaleY;
+      if (this.mouse) {
+        this.mouse.x = (touch.clientX - rect.left) * scaleX;
+        this.mouse.y = (touch.clientY - rect.top) * scaleY;
       }
     }, { passive: false });
     this.canvas.addEventListener('touchend', (e) => {
-      if (this.running && sceneRunner.mouse) {
-        sceneRunner.mouse.left = false;
+      if (this.running && this.mouse) {
+        this.mouse.left = false;
       }
     });
 
     this.log('DraftBox Game Engine ready. Click Run to start.');
   },
 
-  bindTouchControl(elementId, keyCode) {
-    const el = document.getElementById(elementId);
-    if (!el) return;
-    el.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (this.running && this.keys) this.keys[keyCode] = true;
-      el.classList.add('pressed');
-    }, { passive: false });
-    el.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      if (this.running && this.keys) this.keys[keyCode] = false;
-      el.classList.remove('pressed');
-    }, { passive: false });
-    el.addEventListener('touchcancel', (e) => {
-      if (this.running && this.keys) this.keys[keyCode] = false;
-      el.classList.remove('pressed');
-    });
-    // Mouse fallback
-    el.addEventListener('mousedown', () => {
-      if (this.running && this.keys) this.keys[keyCode] = true;
-      el.classList.add('pressed');
-    });
-    el.addEventListener('mouseup', () => {
-      if (this.running && this.keys) this.keys[keyCode] = false;
-      el.classList.remove('pressed');
-    });
-    el.addEventListener('mouseleave', () => {
-      if (this.running && this.keys) this.keys[keyCode] = false;
-      el.classList.remove('pressed');
-    });
-  },
-
   log(msg, type = 'log') {
-    const div = document.createElement('div');
-    div.className = type;
-    div.textContent = '> ' + msg;
-    this.console.appendChild(div);
-    this.console.scrollTop = this.console.scrollHeight;
+    this.onLog(msg, type);
   },
 
   clearLog() {
-    this.console.innerHTML = '';
+    this.onClear();
   },
 
   run(code, sprites) {
@@ -172,7 +128,7 @@ const sceneRunner = {
         try {
           const a = new Audio(name);
           a.play().catch(() => {});
-        } catch(e) { }
+        } catch (e) { }
       },
       log(msg) { runner.log(msg); }
     };
@@ -243,8 +199,6 @@ const sceneRunner = {
 
   reset() {
     this.stop();
-    this.clearLog();
-    this.log('Reset. Click Run to start.');
     const ctx = this.ctx;
     if (ctx) {
       ctx.fillStyle = '#0f0f23';

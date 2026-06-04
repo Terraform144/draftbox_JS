@@ -1,13 +1,22 @@
 import React, { useCallback, useRef } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
+import { EditorView } from '@codemirror/view';
 import { oneDark } from '@codemirror/theme-one-dark';
+
 import { undo, redo } from '@codemirror/commands';
+
 import sourcesPanel from '../lib/sources-panel';
 import { defaultCode } from '../lib/default-code';
 
+const customTheme = EditorView.theme({
+  '&': { backgroundColor: '#111211' },
+  '.cm-gutters': { backgroundColor: '#111211' },
+});
+
 export default function CodeEditor({ show, code, onCodeChange, onRun }) {
   const editorRef = useRef(null);
+  const sourceNameRef = useRef(null);
 
   const handleUndo = useCallback(() => {
     const view = editorRef.current?.view;
@@ -20,7 +29,7 @@ export default function CodeEditor({ show, code, onCodeChange, onRun }) {
   }, []);
 
   const handleSave = useCallback(async () => {
-    const name = document.getElementById('sourceNameInput').value;
+    const name = sourceNameRef.current?.value;
     try {
       await sourcesPanel.saveSource(code, name);
     } catch (err) {
@@ -30,8 +39,7 @@ export default function CodeEditor({ show, code, onCodeChange, onRun }) {
 
   const handleNew = useCallback(() => {
     onCodeChange(defaultCode);
-    const input = document.getElementById('sourceNameInput');
-    if (input) input.value = 'my_game';
+    if (sourceNameRef.current) sourceNameRef.current.value = 'my_game';
   }, [onCodeChange]);
 
   const handleFormat = useCallback(() => {
@@ -56,7 +64,7 @@ export default function CodeEditor({ show, code, onCodeChange, onRun }) {
         <h2>Code Editor</h2>
         <div className="code-controls">
           <span className="file-name" id="currentFileName">game.js</span>
-          <input type="text" id="sourceNameInput" placeholder="source_name" defaultValue="my_game" className="source-name-input" />
+          <input type="text" id="sourceNameInput" ref={sourceNameRef} placeholder="source_name" defaultValue="my_game" className="source-name-input" />
           <button id="saveSourceBtn" title="Save source (Ctrl+S)" onClick={handleSave}>💾 Save</button>
           <button id="newSourceBtn" title="New source" onClick={handleNew}>📄 New</button>
           <button id="formatBtn" title="Format Code" onClick={handleFormat}>🔧</button>
@@ -71,7 +79,7 @@ export default function CodeEditor({ show, code, onCodeChange, onRun }) {
             value={code || defaultCode}
             onChange={handleChange}
             extensions={[javascript()]}
-            theme={oneDark}
+            theme={[...oneDark, customTheme]}
             height="100%"
             indentWithTab={false}
           />

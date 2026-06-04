@@ -16,10 +16,15 @@ export default function App() {
   const [code, setCode] = useState(defaultCode);
 
   useEffect(() => {
-    pixelEditor.init('pixelCanvas');
-    sceneRunner.init('sceneCanvas');
+    pixelEditor.init(document.getElementById('pixelCanvas'));
+    sceneRunner.init(document.getElementById('sceneCanvas'), {
+      onLog() {}
+    });
     window.__setCode = setCode;
-    return () => { delete window.__setCode; };
+    return () => {
+      delete window.__setCode;
+      pixelEditor.destroy();
+    };
   }, []);
 
   const handleRun = useCallback(() => {
@@ -51,6 +56,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    window.__demoRunner = handleDemoRun;
+    return () => { delete window.__demoRunner; };
+  }, [handleDemoRun]);
+
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
@@ -59,7 +69,7 @@ export default function App() {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         if (currentTab === 'editor') {
-          pixelEditor.saveSprite();
+          pixelEditor.saveSprite(document.getElementById('spriteName')?.value);
         } else {
           const saveBtn = document.getElementById('saveSourceBtn');
           if (saveBtn) saveBtn.click();

@@ -13,38 +13,23 @@ const pixelEditor = {
   sprites: {},
   undoStack: [],
   undoMaxDepth: 5,
-  paletteColors: [
-    '#000000', '#ffffff', '#e94560', '#0f3460', '#16213e', '#533483',
-    '#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#f38181', '#aa96da',
-    '#fcbad3', '#a8d8ea', '#ff9a3c', '#00b894', '#6c5ce7', '#dfe6e9'
-  ],
-  elements: {},
+  showGrid: true,
+  brushSize: 1,
+  onStateChange: null,
 
-  init(canvasId, opts = {}) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.gridCols = this.canvas.width / this.pixelSize;
-    this.gridRows = this.canvas.height / this.pixelSize;
-    this.elements = {
-      palette: opts.paletteEl || document.getElementById('palette'),
-      colorPicker: opts.colorPickerEl || document.getElementById('colorPicker'),
-      showGrid: opts.showGridEl || document.getElementById('showGrid'),
-      brushSize: opts.brushSizeEl || document.getElementById('brushSize'),
-      spriteName: opts.spriteNameEl || document.getElementById('spriteName'),
-      spriteList: opts.spriteListEl || document.getElementById('spriteList'),
-      brushBtn: opts.brushBtnEl || document.getElementById('brushBtn'),
-      eraserBtn: opts.eraserBtnEl || document.getElementById('eraserBtn'),
-      lineBtn: opts.lineBtnEl || document.getElementById('lineBtn'),
-      fillBtn: opts.fillBtnEl || document.getElementById('fillBtn'),
-      clearBtn: opts.clearBtnEl || document.getElementById('clearBtn'),
-      saveSpriteBtn: opts.saveSpriteBtnEl || document.getElementById('saveSpriteBtn'),
-      exportSpriteBtn: opts.exportSpriteBtnEl || document.getElementById('exportSpriteBtn'),
-    };
+  init(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.gridCols = canvas.width / this.pixelSize;
+    this.gridRows = canvas.height / this.pixelSize;
     this.initPixels();
-    this.createPalette();
-    this.bindEvents();
+    this.bindCanvasEvents();
     this.draw();
-    this.loadSpriteList();
+    this.onStateChange && this.onStateChange({ sprites: { ...this.sprites }, undoAvailable: this.undoStack.length > 0 });
+  },
+
+  destroy() {
+    this.unbindCanvasEvents();
   },
 
   initPixels() {
@@ -55,23 +40,6 @@ const pixelEditor = {
         this.pixels[y][x] = null;
       }
     }
-  },
-
-  createPalette() {
-    const container = this.elements.palette;
-    container.innerHTML = '';
-    this.paletteColors.forEach(color => {
-      const div = document.createElement('div');
-      div.className = 'palette-color';
-      div.style.backgroundColor = color;
-      div.addEventListener('click', () => {
-        this.currentColor = color;
-        this.elements.colorPicker.value = color;
-        container.querySelectorAll('.palette-color').forEach(c => c.classList.remove('active'));
-        div.classList.add('active');
-      });
-      container.appendChild(div);
-    });
   },
 
   draw() {
@@ -105,8 +73,7 @@ const pixelEditor = {
       }
     }
 
-    const showGrid = this.elements.showGrid;
-    if (showGrid && showGrid.checked) {
+    if (this.showGrid) {
       ctx.strokeStyle = 'rgba(255,255,255,0.08)';
       ctx.lineWidth = 1;
       for (let i = 0; i <= this.gridCols; i++) {
@@ -136,7 +103,7 @@ const pixelEditor = {
   },
 
   drawPixel(x, y) {
-    const size = parseInt(this.elements.brushSize.value);
+    const size = this.brushSize;
     const half = Math.floor(size / 2);
     for (let dy = -half; dy < size - half; dy++) {
       for (let dx = -half; dx < size - half; dx++) {
@@ -186,15 +153,16 @@ const pixelEditor = {
     this.draw();
   },
 
-  clonePixels() {
-    return this.pixels.map(row => [...row]);
-  },
-
   saveState() {
     this.undoStack.push(this.clonePixels());
     if (this.undoStack.length > this.undoMaxDepth) {
       this.undoStack.shift();
     }
+    this.onStateChange && this.onStateChange({ undoAvailable: true });
+  },
+
+  clonePixels() {
+    return this.pixels.map(row => [...row]);
   },
 
   undo() {
@@ -202,6 +170,14 @@ const pixelEditor = {
     this.pixels = this.undoStack.pop();
     this.lineStart = null;
     this.lineEnd = null;
+    this.draw();
+    this.onStateChange && this.onStateChange({ undoAvailable: this.undoStack.length > 0 });
+  },
+
+  clearPixels() {
+    this.saveState();
+    this.cancelLine();
+    this.initPixels();
     this.draw();
   },
 
@@ -232,8 +208,8 @@ const pixelEditor = {
     link.click();
   },
 
-  saveSprite() {
-    const name = this.elements.spriteName.value.trim() || 'sprite';
+  saveSprite(name) {
+    const spriteName = (name || 'sprite').trim() || 'sprite';
     const canvas = document.createElement('canvas');
     canvas.width = this.gridCols;
     canvas.height = this.gridRows;
@@ -246,41 +222,14 @@ const pixelEditor = {
         }
       }
     }
-    this.sprites[name] = canvas;
-    this.loadSpriteList();
+    this.sprites[spriteName] = canvas;
+    this.onStateChange && this.onStateChange({ sprites: { ...this.sprites } });
+    return spriteName;
   },
 
-  loadSpriteList() {
-    const list = this.elements.spriteList;
-    list.innerHTML = '';
-    Object.keys(this.sprites).forEach(name => {
-      const item = document.createElement('div');
-      item.className = 'sprite-item';
-      const preview = document.createElement('canvas');
-      preview.width = 16;
-      preview.height = 16;
-      const pctx = preview.getContext('2d');
-      pctx.imageSmoothingEnabled = false;
-      pctx.drawImage(this.sprites[name], 0, 0, 16, 16);
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'sprite-name';
-      nameSpan.textContent = name;
-      const delBtn = document.createElement('button');
-      delBtn.className = 'sprite-del';
-      delBtn.textContent = '×';
-      delBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        delete this.sprites[name];
-        this.loadSpriteList();
-      });
-      item.addEventListener('click', () => {
-        this.loadSpriteToEditor(name);
-      });
-      item.appendChild(preview);
-      item.appendChild(nameSpan);
-      item.appendChild(delBtn);
-      list.appendChild(item);
-    });
+  deleteSprite(name) {
+    delete this.sprites[name];
+    this.onStateChange && this.onStateChange({ sprites: { ...this.sprites } });
   },
 
   loadSpriteToEditor(name) {
@@ -293,9 +242,9 @@ const pixelEditor = {
     for (let y = 0; y < Math.min(srcCanvas.height, this.gridRows); y++) {
       for (let x = 0; x < Math.min(srcCanvas.width, this.gridCols); x++) {
         const i = (y * srcCanvas.width + x) * 4;
-        const r = imageData.data[i], g = imageData.data[i+1], b = imageData.data[i+2], a = imageData.data[i+3];
+        const r = imageData.data[i], g = imageData.data[i + 1], b = imageData.data[i + 2], a = imageData.data[i + 3];
         if (a > 128) {
-          const hex = '#' + [r,g,b].map(v => v.toString(16).padStart(2, '0')).join('');
+          const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
           this.pixels[y][x] = hex;
         }
       }
@@ -311,44 +260,37 @@ const pixelEditor = {
     return this.sprites;
   },
 
-  bindEvents() {
+  setTool(tool) {
+    this.cancelLine();
+    this.currentTool = tool;
+  },
+
+  setColor(color) {
+    this.currentColor = color;
+  },
+
+  setBrushSize(size) {
+    this.brushSize = Math.max(1, Math.min(10, parseInt(size) || 1));
+  },
+
+  setShowGrid(show) {
+    this.showGrid = show;
+    this.draw();
+  },
+
+  _canvasEventListeners: {},
+
+  bindCanvasEvents() {
     const self = this;
-    const els = this.elements;
 
-    els.brushBtn.addEventListener('click', () => {
-      self.cancelLine(); self.currentTool = 'brush'; self.updateToolButtons();
-    });
-    els.eraserBtn.addEventListener('click', () => {
-      self.cancelLine(); self.currentTool = 'eraser'; self.updateToolButtons();
-    });
-    els.lineBtn.addEventListener('click', () => {
-      self.currentTool = 'line'; self.lineStart = null; self.lineEnd = null;
-      self.updateToolButtons(); self.draw();
-    });
-    els.fillBtn.addEventListener('click', () => {
-      self.cancelLine(); self.currentTool = 'fill'; self.updateToolButtons();
-    });
-    els.clearBtn.addEventListener('click', () => {
-      self.saveState(); self.cancelLine(); self.initPixels(); self.draw();
-    });
-    const undoBtn = document.getElementById('undoBtn');
-    if (undoBtn) undoBtn.addEventListener('click', () => self.undo());
-
-    els.saveSpriteBtn.addEventListener('click', () => self.saveSprite());
-    els.exportSpriteBtn.addEventListener('click', () => self.exportSprite());
-
-    els.colorPicker.addEventListener('input', (e) => {
-      self.currentColor = e.target.value;
-      document.querySelectorAll('.palette-color').forEach(c => c.classList.remove('active'));
-    });
-
-    els.showGrid.addEventListener('change', () => self.draw());
-
-    this.canvas.addEventListener('mousedown', (e) => {
+    const mousedown = (e) => {
       if (e.button === 2) {
         const { x, y } = self.getPixelCoords(e);
         const color = self.pixels[y] && self.pixels[y][x];
-        if (color) { self.currentColor = color; self.elements.colorPicker.value = color; }
+        if (color) {
+          self.currentColor = color;
+          self.onStateChange && self.onStateChange({ colorPick: color });
+        }
         return;
       }
       const { x, y } = self.getPixelCoords(e);
@@ -365,9 +307,9 @@ const pixelEditor = {
         self.saveState();
         self.isDrawing = true; self.drawPixel(x, y);
       }
-    });
+    };
 
-    this.canvas.addEventListener('mousemove', (e) => {
+    const mousemove = (e) => {
       if (self.currentTool === 'line' && self.lineStart !== null) {
         const { x, y } = self.getPixelCoords(e);
         self.lineEnd = { x, y }; self.draw(); return;
@@ -375,19 +317,20 @@ const pixelEditor = {
       if (!self.isDrawing) return;
       const { x, y } = self.getPixelCoords(e);
       self.drawPixel(x, y);
-    });
+    };
 
-    this.canvas.addEventListener('mouseup', () => self.isDrawing = false);
-    this.canvas.addEventListener('mouseleave', () => {
+    const mouseup = () => self.isDrawing = false;
+
+    const mouseleave = () => {
       self.isDrawing = false;
       if (self.currentTool === 'line' && self.lineStart !== null) {
         self.lineStart = null; self.lineEnd = null; self.draw();
       }
-    });
-    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    };
 
-    // Touch events for mobile drawing
-    this.canvas.addEventListener('touchstart', (e) => {
+    const contextmenu = (e) => e.preventDefault();
+
+    const touchstart = (e) => {
       e.preventDefault();
       const touch = e.touches[0];
       const { x, y } = self.getPixelCoords(touch);
@@ -404,9 +347,9 @@ const pixelEditor = {
         self.saveState();
         self.isDrawing = true; self.drawPixel(x, y);
       }
-    }, { passive: false });
+    };
 
-    this.canvas.addEventListener('touchmove', (e) => {
+    const touchmove = (e) => {
       e.preventDefault();
       const touch = e.touches[0];
       if (self.currentTool === 'line' && self.lineStart !== null) {
@@ -416,32 +359,44 @@ const pixelEditor = {
       if (!self.isDrawing) return;
       const { x, y } = self.getPixelCoords(touch);
       self.drawPixel(x, y);
-    }, { passive: false });
+    };
 
-    this.canvas.addEventListener('touchend', (e) => {
+    const touchend = (e) => {
       e.preventDefault();
       self.isDrawing = false;
-    }, { passive: false });
+    };
 
-    document.addEventListener('keydown', self._undoHandler = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        self.undo();
-      }
-    });
-
-    this.canvas.addEventListener('wheel', (e) => {
+    const wheel = (e) => {
       e.preventDefault();
       self.pixelSize = Math.max(2, Math.min(32, self.pixelSize + (e.deltaY > 0 ? -1 : 1)));
       self.draw();
-    });
+    };
+
+    this.canvas.addEventListener('mousedown', mousedown);
+    this.canvas.addEventListener('mousemove', mousemove);
+    this.canvas.addEventListener('mouseup', mouseup);
+    this.canvas.addEventListener('mouseleave', mouseleave);
+    this.canvas.addEventListener('contextmenu', contextmenu);
+    this.canvas.addEventListener('touchstart', touchstart, { passive: false });
+    this.canvas.addEventListener('touchmove', touchmove, { passive: false });
+    this.canvas.addEventListener('touchend', touchend, { passive: false });
+    this.canvas.addEventListener('wheel', wheel, { passive: false });
+
+    this._canvasEventListeners = { mousedown, mousemove, mouseup, mouseleave, contextmenu, touchstart, touchmove, touchend, wheel };
   },
 
-  updateToolButtons() {
-    document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-    const btnMap = { brush: 'brushBtn', eraser: 'eraserBtn', line: 'lineBtn', fill: 'fillBtn' };
-    const btn = this.elements[btnMap[this.currentTool]];
-    if (btn) btn.classList.add('active');
+  unbindCanvasEvents() {
+    if (!this.canvas) return;
+    const listeners = this._canvasEventListeners;
+    this.canvas.removeEventListener('mousedown', listeners.mousedown);
+    this.canvas.removeEventListener('mousemove', listeners.mousemove);
+    this.canvas.removeEventListener('mouseup', listeners.mouseup);
+    this.canvas.removeEventListener('mouseleave', listeners.mouseleave);
+    this.canvas.removeEventListener('contextmenu', listeners.contextmenu);
+    this.canvas.removeEventListener('touchstart', listeners.touchstart);
+    this.canvas.removeEventListener('touchmove', listeners.touchmove);
+    this.canvas.removeEventListener('touchend', listeners.touchend);
+    this.canvas.removeEventListener('wheel', listeners.wheel);
   }
 };
 

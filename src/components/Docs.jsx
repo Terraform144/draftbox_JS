@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { sections, bindDemoButtons, bindSearch } from '../lib/docs-content';
+import { sections } from '../lib/docs-content';
 import sourcesPanel from '../lib/sources-panel';
+import SourcesList from './SourcesList';
 
 export default function Docs({ show, onRun, onLoadSource }) {
   const [activeSubTab, setActiveSubTab] = useState('documentation');
   const [activeSection, setActiveSection] = useState(sections[0]?.id || '');
   const [sources, setSources] = useState([]);
-  const searchInputRef = useRef(null);
-  const navRef = useRef(null);
-  const sourcesListRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const docsContentRef = useRef(null);
 
   useEffect(() => {
     setActiveSection(sections[0]?.id || '');
@@ -20,7 +20,8 @@ export default function Docs({ show, onRun, onLoadSource }) {
       if (!res.ok) throw new Error('Failed to load');
       const data = await res.json();
       window.__setCode && window.__setCode(data.code);
-      document.getElementById('sourceNameInput').value = data.name;
+      const input = document.getElementById('sourceNameInput');
+      if (input) input.value = data.name;
       onLoadSource && onLoadSource();
     } catch (err) {
       console.error('Load source error:', err);
@@ -40,16 +41,11 @@ export default function Docs({ show, onRun, onLoadSource }) {
   const refreshSources = useCallback(async () => {
     try {
       const data = await sourcesPanel.refreshList();
-      const sourcesWithCallbacks = data.map(s => ({
-        ...s,
-        _onLoad: handleLoadSource,
-        _onDelete: handleDeleteSource
-      }));
-      setSources(sourcesWithCallbacks);
+      setSources(data);
     } catch (err) {
       console.error('Refresh sources error:', err);
     }
-  }, [handleLoadSource, handleDeleteSource]);
+  }, []);
 
   useEffect(() => {
     if (activeSubTab === 'sources') {
@@ -58,33 +54,36 @@ export default function Docs({ show, onRun, onLoadSource }) {
   }, [activeSubTab, refreshSources]);
 
   useEffect(() => {
-    if (sourcesListRef.current) {
-      sourcesPanel.renderList(sources, sourcesListRef.current);
-    }
-  }, [sources]);
-
-  useEffect(() => {
-    if (show && activeSubTab === 'documentation') {
-      if (searchInputRef.current && navRef.current) {
-        bindSearch(searchInputRef.current, navRef.current);
+    if (!show || activeSubTab !== 'documentation') return;
+    const el = docsContentRef.current;
+    if (!el) return;
+    const handler = (e) => {
+      const btn = e.target.closest('.demo-play-btn');
+      if (btn && btn.dataset.demo !== undefined) {
+        onRun && onRun(parseInt(btn.dataset.demo));
       }
-      bindDemoButtons(onRun);
-    }
-  }, [show, activeSubTab, onRun, activeSection]);
+    };
+    el.addEventListener('click', handler);
+    return () => el.removeEventListener('click', handler);
+  }, [show, activeSubTab, onRun]);
 
   const currentContent = sections.find(s => s.id === activeSection)?.content || sections[0]?.content || '';
+
+  const filteredSections = searchQuery
+    ? sections.filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : sections;
 
   return (
     <div className="tab-content" style={{ display: show ? 'flex' : 'none' }}>
       <div className="docs-container">
         <div className="docs-subtabs">
-          <button className={`docs-subtab ${activeSubTab === 'documentation' ? 'active' : ''}`} data-subtab="documentation" onClick={() => setActiveSubTab('documentation')}>📖 Documentation</button>
-          <button className={`docs-subtab ${activeSubTab === 'sources' ? 'active' : ''}`} data-subtab="sources" onClick={() => setActiveSubTab('sources')}>📁 Sources</button>
+          <button className={'docs-subtab' + (activeSubTab === 'documentation' ? ' active' : '')} onClick={() => setActiveSubTab('documentation')}>📖 Documentation</button>
+          <button className={'docs-subtab' + (activeSubTab === 'sources' ? ' active' : '')} onClick={() => setActiveSubTab('sources')}>📁 Sources</button>
         </div>
-        <div id="docs-subtab-documentation" className={`docs-subtab-content ${activeSubTab === 'documentation' ? 'active' : ''}`}>
+        <div className={'docs-subtab-content' + (activeSubTab === 'documentation' ? ' active' : '')}>
           <div className="editor-header">
             <h2>Documentation</h2>
-            <input type="text" id="docsSearch" placeholder="Search docs..." className="docs-search" ref={searchInputRef} />
+            <input type="text" id="docsSearch" placeholder="Search docs..." className="docs-search" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
           <select
             id="docsNavSelect"
@@ -97,11 +96,11 @@ export default function Docs({ show, onRun, onLoadSource }) {
             ))}
           </select>
           <div className="docs-body">
-            <nav className="docs-nav" id="docsNav" ref={navRef}>
-              {sections.map(section => (
+            <nav className="docs-nav" id="docsNav">
+              {filteredSections.map(section => (
                 <a
                   key={section.id}
-                  href={`#${section.id}`}
+                  href={'#' + section.id}
                   className={activeSection === section.id ? 'active' : ''}
                   onClick={(e) => { e.preventDefault(); setActiveSection(section.id); }}
                 >
@@ -109,16 +108,16 @@ export default function Docs({ show, onRun, onLoadSource }) {
                 </a>
               ))}
             </nav>
-            <div className="docs-content" id="docsContent" dangerouslySetInnerHTML={{ __html: currentContent }} />
+            <div className="docs-content" id="docsContent" ref={docsContentRef} dangerouslySetInnerHTML={{ __html: currentContent }} />
           </div>
         </div>
-        <div id="docs-subtab-sources" className={`docs-subtab-content ${activeSubTab === 'sources' ? 'active' : ''}`}>
+        <div className={'docs-subtab-content' + (activeSubTab === 'sources' ? ' active' : '')}>
           <div className="sources-container">
             <div className="editor-header">
               <h2>Sources</h2>
-              <button id="refreshSourcesBtn" title="Refresh list" onClick={refreshSources}>🔄 Refresh</button>
+              <button id="refreshSourcesBtn" onClick={refreshSources}>🔄 Refresh</button>
             </div>
-            <div id="sourcesList" className="sources-list" ref={sourcesListRef}></div>
+            <SourcesList sources={sources} onLoad={handleLoadSource} onDelete={handleDeleteSource} onRefresh={refreshSources} />
           </div>
         </div>
       </div>
