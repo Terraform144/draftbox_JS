@@ -21,6 +21,7 @@ export default function PixelEditor({ show }) {
               <button id="lineBtn" className="tool-btn" title="Line">📏</button>
               <button id="fillBtn" className="tool-btn" title="Fill">🪣</button>
               <button id="clearBtn" className="tool-btn" title="Clear">🗑️</button>
+              <button id="undoBtn" className="tool-btn" title="Undo (Ctrl+Z)">↩</button>
               <label className="tool-label">
                 Size:
                 <input type="number" id="brushSize" defaultValue="1" min="1" max="10" />

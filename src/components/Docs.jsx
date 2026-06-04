@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { sections, bindDemoButtons, bindSearch } from '../lib/docs-content';
 import sourcesPanel from '../lib/sources-panel';
 
-export default function Docs({ show, onRun }) {
+export default function Docs({ show, onRun, onLoadSource }) {
   const [activeSubTab, setActiveSubTab] = useState('documentation');
   const [activeSection, setActiveSection] = useState(sections[0]?.id || '');
   const [sources, setSources] = useState([]);
@@ -21,10 +21,11 @@ export default function Docs({ show, onRun }) {
       const data = await res.json();
       window.__setCode && window.__setCode(data.code);
       document.getElementById('sourceNameInput').value = data.name;
+      onLoadSource && onLoadSource();
     } catch (err) {
       console.error('Load source error:', err);
     }
-  }, []);
+  }, [onLoadSource]);
 
   const handleDeleteSource = useCallback(async (name) => {
     try {
@@ -69,7 +70,7 @@ export default function Docs({ show, onRun }) {
       }
       bindDemoButtons(onRun);
     }
-  }, [show, activeSubTab, onRun]);
+  }, [show, activeSubTab, onRun, activeSection]);
 
   const currentContent = sections.find(s => s.id === activeSection)?.content || sections[0]?.content || '';
 

@@ -1,17 +1,19 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 import PixelEditor from './components/PixelEditor';
-import CodeEditor from './components/CodeEditor';
+import { defaultCode } from './lib/default-code';
 import Scene from './components/Scene';
 import Docs from './components/Docs';
 import sceneRunner from './lib/scene-runner';
 import pixelEditor from './lib/pixel-editor';
 import demos from './lib/demos';
 
+const CodeEditor = lazy(() => import('./components/CodeEditor'));
+
 export default function App() {
   const [currentTab, setCurrentTab] = useState('editor');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(defaultCode);
 
   useEffect(() => {
     pixelEditor.init('pixelCanvas');
@@ -39,12 +41,13 @@ export default function App() {
     const demo = demos[demoIndex];
     if (!demo) return;
     setCode(demo.code);
+    const sprites = pixelEditor.getAllSprites();
+    sceneRunner.run(demo.code, sprites);
+    setCurrentTab('scene');
+  }, []);
+
+  const handleLoadSource = useCallback(() => {
     setCurrentTab('code');
-    setTimeout(() => {
-      const sprites = pixelEditor.getAllSprites();
-      sceneRunner.run(demo.code, sprites);
-      setCurrentTab('scene');
-    }, 100);
   }, []);
 
   useEffect(() => {
@@ -74,9 +77,11 @@ export default function App() {
       <button id="sidebarToggle" className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
       <main id="main-content">
         <PixelEditor show={currentTab === 'editor'} />
-        <CodeEditor show={currentTab === 'code'} code={code} onCodeChange={setCode} onRun={handleRun} />
-        <Scene show={currentTab === 'scene'} />
-        <Docs show={currentTab === 'docs'} onRun={handleDemoRun} />
+        <Suspense fallback={null}>
+          <CodeEditor show={currentTab === 'code'} code={code} onCodeChange={setCode} onRun={handleRun} />
+        </Suspense>
+        <Scene show={currentTab === 'scene'} onRun={handleRun} />
+        <Docs show={currentTab === 'docs'} onRun={handleDemoRun} onLoadSource={handleLoadSource} />
       </main>
     </div>
   );

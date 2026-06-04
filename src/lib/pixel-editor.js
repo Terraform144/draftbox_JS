@@ -11,6 +11,8 @@ const pixelEditor = {
   lineStart: null,
   lineEnd: null,
   sprites: {},
+  undoStack: [],
+  undoMaxDepth: 5,
   paletteColors: [
     '#000000', '#ffffff', '#e94560', '#0f3460', '#16213e', '#533483',
     '#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#f38181', '#aa96da',
@@ -126,8 +128,10 @@ const pixelEditor = {
     const rect = this.canvas.getBoundingClientRect();
     const scaleX = this.canvas.width / rect.width;
     const scaleY = this.canvas.height / rect.height;
-    const x = Math.floor((e.clientX - rect.left) * scaleX / this.pixelSize);
-    const y = Math.floor((e.clientY - rect.top) * scaleY / this.pixelSize);
+    const clientX = e.clientX !== undefined ? e.clientX : e.pageX;
+    const clientY = e.clientY !== undefined ? e.clientY : e.pageY;
+    const x = Math.floor((clientX - rect.left) * scaleX / this.pixelSize);
+    const y = Math.floor((clientY - rect.top) * scaleY / this.pixelSize);
     return { x: Math.max(0, Math.min(x, this.gridCols - 1)), y: Math.max(0, Math.min(y, this.gridRows - 1)) };
   },
 
@@ -179,6 +183,25 @@ const pixelEditor = {
       this.pixels[y][x] = this.currentColor;
       stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
     }
+    this.draw();
+  },
+
+  clonePixels() {
+    return this.pixels.map(row => [...row]);
+  },
+
+  saveState() {
+    this.undoStack.push(this.clonePixels());
+    if (this.undoStack.length > this.undoMaxDepth) {
+      this.undoStack.shift();
+    }
+  },
+
+  undo() {
+    if (this.undoStack.length === 0) return;
+    this.pixels = this.undoStack.pop();
+    this.lineStart = null;
+    this.lineEnd = null;
     this.draw();
   },
 
@@ -263,6 +286,7 @@ const pixelEditor = {
   loadSpriteToEditor(name) {
     const srcCanvas = this.sprites[name];
     if (!srcCanvas) return;
+    this.saveState();
     this.initPixels();
     const srcCtx = srcCanvas.getContext('2d');
     const imageData = srcCtx.getImageData(0, 0, srcCanvas.width, srcCanvas.height);
@@ -305,8 +329,10 @@ const pixelEditor = {
       self.cancelLine(); self.currentTool = 'fill'; self.updateToolButtons();
     });
     els.clearBtn.addEventListener('click', () => {
-      self.cancelLine(); self.initPixels(); self.draw();
+      self.saveState(); self.cancelLine(); self.initPixels(); self.draw();
     });
+    const undoBtn = document.getElementById('undoBtn');
+    if (undoBtn) undoBtn.addEventListener('click', () => self.undo());
 
     els.saveSpriteBtn.addEventListener('click', () => self.saveSprite());
     els.exportSpriteBtn.addEventListener('click', () => self.exportSprite());
@@ -326,15 +352,17 @@ const pixelEditor = {
         return;
       }
       const { x, y } = self.getPixelCoords(e);
-      if (self.currentTool === 'fill') { self.floodFill(x, y); }
+      if (self.currentTool === 'fill') { self.saveState(); self.floodFill(x, y); }
       else if (self.currentTool === 'line') {
         if (self.lineStart === null) {
           self.lineStart = { x, y }; self.lineEnd = { x, y }; self.draw();
         } else {
+          self.saveState();
           self.drawLinePixels(self.lineStart.x, self.lineStart.y, x, y);
           self.lineStart = null; self.lineEnd = null; self.draw();
         }
       } else {
+        self.saveState();
         self.isDrawing = true; self.drawPixel(x, y);
       }
     });
@@ -358,12 +386,54 @@ const pixelEditor = {
     });
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
+    // Touch events for mobile drawing
+    this.canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const { x, y } = self.getPixelCoords(touch);
+      if (self.currentTool === 'fill') { self.saveState(); self.floodFill(x, y); }
+      else if (self.currentTool === 'line') {
+        if (self.lineStart === null) {
+          self.lineStart = { x, y }; self.lineEnd = { x, y }; self.draw();
+        } else {
+          self.saveState();
+          self.drawLinePixels(self.lineStart.x, self.lineStart.y, x, y);
+          self.lineStart = null; self.lineEnd = null; self.draw();
+        }
+      } else {
+        self.saveState();
+        self.isDrawing = true; self.drawPixel(x, y);
+      }
+    }, { passive: false });
+
+    this.canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      if (self.currentTool === 'line' && self.lineStart !== null) {
+        const { x, y } = self.getPixelCoords(touch);
+        self.lineEnd = { x, y }; self.draw(); return;
+      }
+      if (!self.isDrawing) return;
+      const { x, y } = self.getPixelCoords(touch);
+      self.drawPixel(x, y);
+    }, { passive: false });
+
+    this.canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      self.isDrawing = false;
+    }, { passive: false });
+
+    document.addEventListener('keydown', self._undoHandler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        self.undo();
+      }
+    });
+
     this.canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       self.pixelSize = Math.max(2, Math.min(32, self.pixelSize + (e.deltaY > 0 ? -1 : 1)));
-      self.gridCols = Math.floor(self.canvas.width / self.pixelSize);
-      self.gridRows = Math.floor(self.canvas.height / self.pixelSize);
-      self.initPixels(); self.draw();
+      self.draw();
     });
   },
 

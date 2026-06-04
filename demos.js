@@ -16,6 +16,8 @@ function reset() {
 }
 
 function update(dt) {
+  if (keys.Space && winner) { p1.score = 0; p2.score = 0; winner = ''; reset(); }
+
   if (p1.score >= 5 || p2.score >= 5) {
     winner = p1.score >= 5 ? 'PLAYER 1' : 'PLAYER 2';
     return;
@@ -38,8 +40,6 @@ function update(dt) {
 
   if (ball.x < -20) { p2.score++; reset(); }
   if (ball.x > canvas.width + 20) { p1.score++; reset(); }
-
-  if (keys.Space && winner) { p1.score = 0; p2.score = 0; winner = ''; reset(); }
 }
 
 function draw(ctx) {

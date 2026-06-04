@@ -11,7 +11,7 @@ const sceneRunner = {
     this.ctx = this.canvas.getContext('2d');
     this.console = document.getElementById('consoleOutput');
 
-    document.getElementById('sceneRunBtn').addEventListener('click', () => this.run());
+    // Run handled by React component via props
     document.getElementById('sceneStopBtn').addEventListener('click', () => this.stop());
     document.getElementById('sceneResetBtn').addEventListener('click', () => this.reset());
 
@@ -47,7 +47,79 @@ const sceneRunner = {
       }
     });
 
+    // Touch controls: bind d-pad and action buttons
+    this.bindTouchControl('touch-up', 'ArrowUp');
+    this.bindTouchControl('touch-down', 'ArrowDown');
+    this.bindTouchControl('touch-left', 'ArrowLeft');
+    this.bindTouchControl('touch-right', 'ArrowRight');
+    this.bindTouchControl('touch-a', 'Space');
+    this.bindTouchControl('touch-b', 'KeyX');
+
+    // Canvas touch → mouse left click
+    this.canvas.addEventListener('touchstart', (e) => {
+      if (!this.running) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      if (sceneRunner.mouse) {
+        sceneRunner.mouse.x = (touch.clientX - rect.left) * scaleX;
+        sceneRunner.mouse.y = (touch.clientY - rect.top) * scaleY;
+        sceneRunner.mouse.left = true;
+      }
+    }, { passive: false });
+    this.canvas.addEventListener('touchmove', (e) => {
+      if (!this.running) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = this.canvas.width / rect.width;
+      const scaleY = this.canvas.height / rect.height;
+      if (sceneRunner.mouse) {
+        sceneRunner.mouse.x = (touch.clientX - rect.left) * scaleX;
+        sceneRunner.mouse.y = (touch.clientY - rect.top) * scaleY;
+      }
+    }, { passive: false });
+    this.canvas.addEventListener('touchend', (e) => {
+      if (this.running && sceneRunner.mouse) {
+        sceneRunner.mouse.left = false;
+      }
+    });
+
     this.log('DraftBox Game Engine ready. Click Run to start.');
+  },
+
+  bindTouchControl(elementId, keyCode) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (this.running && this.keys) this.keys[keyCode] = true;
+      el.classList.add('pressed');
+    }, { passive: false });
+    el.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      if (this.running && this.keys) this.keys[keyCode] = false;
+      el.classList.remove('pressed');
+    }, { passive: false });
+    el.addEventListener('touchcancel', (e) => {
+      if (this.running && this.keys) this.keys[keyCode] = false;
+      el.classList.remove('pressed');
+    });
+    // Mouse fallback
+    el.addEventListener('mousedown', () => {
+      if (this.running && this.keys) this.keys[keyCode] = true;
+      el.classList.add('pressed');
+    });
+    el.addEventListener('mouseup', () => {
+      if (this.running && this.keys) this.keys[keyCode] = false;
+      el.classList.remove('pressed');
+    });
+    el.addEventListener('mouseleave', () => {
+      if (this.running && this.keys) this.keys[keyCode] = false;
+      el.classList.remove('pressed');
+    });
   },
 
   log(msg, type = 'log') {

@@ -1026,14 +1026,24 @@ const cy = canvas.height / 2;</code></pre>
 `;
 
 const demos = `
-<h1>Retro Game Demos</h1>
-<p>Complete retro games you can load and play instantly. Each demo is a fully working game written with the DraftBox API. Click <strong>▶ Load & Run</strong> to load the code into the editor and start playing.</p>
+<div style="text-align:center;padding:20px 0;background:linear-gradient(135deg,#1a3a2e,#2d5a47);border-radius:16px;margin-bottom:24px;border:2px solid var(--accent);">
+  <span style="font-size:48px;display:block;margin-bottom:8px;">🎮</span>
+  <h1 style="margin-bottom:8px;">Retro Game Demos</h1>
+  <p style="font-size:15px;max-width:500px;margin:0 auto;">Charger un jeu retro, le code apparaît dans l'éditeur et le jeu se lance tout seul. Prêt à jouer ?</p>
+</div>
 
+<div class="demo-grid">
 ${Demos.map((demo, i) => `
-<h2 id="demo-${i}">${demo.name}</h2>
-<p>${demo.desc}</p>
-<button class="btn-run demo-run-btn" data-demo="${i}" style="margin-bottom:20px;padding:8px 20px;">▶ Load & Run ${demo.name}</button>
+<div class="demo-card">
+  <div class="demo-card-content">
+    <div class="demo-card-emoji">${['🕹️','🐍','👾','🧱','☄️','🏃'][i % 6]}</div>
+    <h3>${demo.name}</h3>
+    <p>${demo.desc}</p>
+    <button class="demo-play-btn" data-demo="${i}">▶ Jouer à ${demo.name}</button>
+  </div>
+</div>
 `).join('')}
+</div>
 `;
 
 export const sections = [
@@ -1052,16 +1062,22 @@ export const sections = [
   { id: 'math', title: 'Math Utilities', content: math },
   { id: 'patterns', title: 'Game Patterns', content: patterns },
   { id: 'api-ref', title: 'DraftBox API Reference', content: apiRef },
-  { id: 'demos', title: 'Retro Game Demos', content: demos },
+  { id: 'demos', title: '🎮 Retro Game Demos', content: demos },
 ];
 
 export function bindDemoButtons(onRun) {
-  document.querySelectorAll('.demo-run-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+  document.querySelectorAll('.demo-play-btn').forEach(btn => {
+    btn.removeEventListener('click', btn._demoHandler);
+    btn._demoHandler = () => {
       const i = parseInt(btn.dataset.demo);
       if (onRun) onRun(i);
-    });
+    };
+    btn.addEventListener('click', btn._demoHandler);
   });
+}
+
+export function onDocsSectionChange(container, onRun) {
+  bindDemoButtons(onRun);
 }
 
 export function bindSearch(searchInput, navContainer) {

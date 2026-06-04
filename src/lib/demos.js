@@ -3,7 +3,7 @@ export default [
     name: 'Pong',
     desc: 'Classic 2-player pong. Player 1: W/S • Player 2: Arrow Up/Down • First to 5 wins.',
     code: `// PONG
-let ball = { x: 480, y: 270, vx: 250, vy: 150, size: 8 };
+let ball = { x: 480, y: 270, vx: 250, vy: 150, w: 8, h: 8 };
 let p1 = { x: 20, y: 220, w: 8, h: 60, score: 0 };
 let p2 = { x: 932, y: 220, w: 8, h: 60, score: 0 };
 const SPEED = 280;
@@ -16,6 +16,8 @@ function reset() {
 }
 
 function update(dt) {
+  if (keys.Space && winner) { p1.score = 0; p2.score = 0; winner = ''; reset(); }
+
   if (p1.score >= 5 || p2.score >= 5) {
     winner = p1.score >= 5 ? 'PLAYER 1' : 'PLAYER 2';
     return;
@@ -31,15 +33,13 @@ function update(dt) {
   ball.x += ball.vx * dt;
   ball.y += ball.vy * dt;
 
-  if (ball.y <= 0 || ball.y + ball.size >= canvas.height) ball.vy *= -1;
+  if (ball.y <= 0 || ball.y + ball.h >= canvas.height) ball.vy *= -1;
 
   if (rectCollide(ball, p1)) { ball.vx = Math.abs(ball.vx); ball.x = p1.x + p1.w; }
-  if (rectCollide(ball, p2)) { ball.vx = -Math.abs(ball.vx); ball.x = p2.x - ball.size; }
+  if (rectCollide(ball, p2)) { ball.vx = -Math.abs(ball.vx); ball.x = p2.x - ball.w; }
 
   if (ball.x < -20) { p2.score++; reset(); }
   if (ball.x > canvas.width + 20) { p1.score++; reset(); }
-
-  if (keys.Space && winner) { p1.score = 0; p2.score = 0; winner = ''; reset(); }
 }
 
 function draw(ctx) {
@@ -48,7 +48,7 @@ function draw(ctx) {
   ctx.fillStyle = '#fff';
   ctx.fillRect(p1.x, p1.y, p1.w, p1.h);
   ctx.fillRect(p2.x, p2.y, p2.w, p2.h);
-  ctx.fillRect(ball.x, ball.y, ball.size, ball.size);
+  ctx.fillRect(ball.x, ball.y, ball.w, ball.h);
 
   ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height);
   ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.setLineDash([8,8]); ctx.stroke(); ctx.setLineDash([]);
@@ -148,7 +148,7 @@ function init() {
   score = 0; gameOver = false; win = false;
   for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++)
-      aliens.push({x:70+c*80,y:40+r*50,w:50,h:30,alive:true});
+      aliens.push({x:70+c*80,y:40+r*50,w:50,h:30,alive:true,row:r});
 }
 
 function update(dt) {
@@ -171,7 +171,7 @@ function update(dt) {
     if (a.x <= 10 || a.x + a.w >= canvas.width - 10) hitWall = true;
     if (a.y + a.h >= player.y) { gameOver = true; return; }
     for (let b of bullets) {
-      if (rectCollide(b, a)) { a.alive = false; b.y = -100; score += 10; }
+      if (rectCollide(b, a)) { a.alive = false; b.y = -100; score += a.row < 1 ? 30 : a.row < 3 ? 20 : 10; }
     }
   }
   if (hitWall) { alienDir *= -1; for (let a of aliens) a.y += 20; }
@@ -180,15 +180,44 @@ function update(dt) {
   if (aliens.length === 0) { win = true; }
 }
 
+function drawAlien(ctx, a) {
+  const t = a.row;
+  ctx.fillStyle = '#e94560';
+  const p = 5;
+  function px(x, y) { ctx.fillRect(a.x + x * p, a.y + y * p, p, p); }
+  if (t === 0) {
+    for (let x=1;x<=8;x++) px(x,0);
+    for (let x=0;x<=9;x++) px(x,1);
+    for (let x=0;x<=9;x++) if (x<3||x>6) px(x,2);
+    for (let x=0;x<=9;x++) px(x,3);
+    for (let x=0;x<=9;x++) if (x<2||x>7) px(x,4);
+    for (let x=1;x<=8;x++) if (x<3||x>6) px(x,5);
+    px(4,6); px(5,6);
+  } else if (t === 1 || t === 2) {
+    for (let x=1;x<=8;x++) px(x,0);
+    for (let x=0;x<=9;x++) px(x,1);
+    for (let x=0;x<=9;x++) px(x,2);
+    for (let x=0;x<=9;x++) if (x<3||x>6) px(x,3);
+    for (let x=0;x<=9;x++) px(x,4);
+    for (let x=0;x<=9;x++) if (x<3||x>6) px(x,5);
+    if (t === 2) { px(0,5); px(9,5); px(1,6); px(8,6); }
+  } else {
+    for (let x=2;x<=7;x++) px(x,0);
+    for (let x=1;x<=8;x++) px(x,1);
+    for (let x=0;x<=9;x++) px(x,2);
+    for (let x=0;x<=9;x++) px(x,3);
+    for (let x=1;x<=8;x++) if (x<3||x>6) px(x,4);
+    px(0,4); px(9,4);
+    for (let x=2;x<=7;x++) px(x,5);
+    px(4,6); px(5,6);
+  }
+}
+
 function draw(ctx) {
   ctx.fillStyle = '#0a0a1a'; ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle = '#4ecdc4'; ctx.fillRect(player.x,player.y,player.w,player.h);
   for (let b of bullets) { ctx.fillStyle = '#ffd700'; ctx.fillRect(b.x,b.y,b.w,b.h); }
-  for (let a of aliens) {
-    ctx.fillStyle = '#e94560'; ctx.fillRect(a.x,a.y,a.w,a.h);
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.fillRect(a.x+5,a.y+5,a.w-10,8);
-  }
+  for (let a of aliens) drawAlien(ctx, a);
   ctx.fillStyle = '#8892b0'; ctx.font = '18px monospace';
   ctx.fillText('Score: ' + score, 16, 32);
   if (gameOver) {
@@ -206,12 +235,12 @@ function draw(ctx) {
     name: 'Breakout',
     desc: 'Break all the bricks! Move paddle with Arrow keys, ball bounces off everything.',
     code: `// BREAKOUT
-let paddle, ball, bricks, score, lives, gameOver;
+let paddle, ball, bricks, score, lives, gameOver, win;
 
 function init() {
   paddle = {x:380,y:520,w:160,h:16};
   ball = {x:460,y:500,vx:200,vy:-250,r:6};
-  bricks = []; score = 0; lives = 3; gameOver = false;
+  bricks = []; score = 0; lives = 3; gameOver = false; win = false;
   const colors = ['#e94560','#ff6b6b','#ffd700','#4ecdc4','#533483'];
   for (let r = 0; r < 5; r++)
     for (let c = 0; c < 10; c++)
@@ -219,7 +248,7 @@ function init() {
 }
 
 function update(dt) {
-  if (gameOver) { if (keys.Space) init(); return; }
+  if (gameOver || win) { if (keys.Space) init(); return; }
 
   if (keys.ArrowLeft) paddle.x -= 500 * dt;
   if (keys.ArrowRight) paddle.x += 500 * dt;
@@ -253,6 +282,8 @@ function update(dt) {
     }
   }
 
+  if (bricks.every(b => !b.alive)) { win = true; }
+
   if (ball.y > canvas.height) { lives--; if (lives <= 0) gameOver = true; else { ball.vx=0; ball.vy=0; } }
 }
 
@@ -272,6 +303,13 @@ function draw(ctx) {
   if (gameOver) {
     ctx.fillStyle = '#e94560'; ctx.font = 'bold 36px monospace'; ctx.textAlign = 'center';
     ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2);
+    ctx.font = '16px monospace'; ctx.fillStyle = '#8892b0';
+    ctx.fillText('Press SPACE to restart', canvas.width/2, canvas.height/2 + 30);
+    ctx.textAlign = 'left';
+  }
+  if (win) {
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 36px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('YOU WIN!  Score: ' + score, canvas.width/2, canvas.height/2);
     ctx.font = '16px monospace'; ctx.fillStyle = '#8892b0';
     ctx.fillText('Press SPACE to restart', canvas.width/2, canvas.height/2 + 30);
     ctx.textAlign = 'left';

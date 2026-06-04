@@ -18,7 +18,7 @@ const App = {
 
     this.initKeyboardShortcuts();
     this.initMobileSidebar();
-    console.log('DraftBox initialized.');
+    console.log('myTinyGamemaker initialized.');
   },
 
   initMobileSidebar() {

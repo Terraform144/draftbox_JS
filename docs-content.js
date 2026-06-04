@@ -18,7 +18,7 @@ const DocsContent = {
       { id: 'math', title: 'Math Utilities', content: this.math },
       { id: 'patterns', title: 'Game Patterns', content: this.patterns },
       { id: 'api-ref', title: 'DraftBox API Reference', content: this.apiRef },
-      { id: 'demos', title: 'Retro Game Demos', content: this.demos },
+      { id: 'demos', title: '🎮 Retro Game Demos', content: this.demos },
     ];
     this.render();
     this.bindSearch();
@@ -76,7 +76,7 @@ const DocsContent = {
   },
 
   bindDemoButtons() {
-    document.querySelectorAll('.demo-run-btn').forEach(btn => {
+    document.querySelectorAll('.demo-play-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const i = parseInt(btn.dataset.demo);
         if (typeof App !== 'undefined' && App.loadAndRun) App.loadAndRun(i);
@@ -1136,13 +1136,23 @@ const cy = canvas.height / 2;</code></pre>
 `; },
 
   get demos() { return `
-<h1>Retro Game Demos</h1>
-<p>Complete retro games you can load and play instantly. Each demo is a fully working game written with the DraftBox API. Click <strong>▶ Load & Run</strong> to load the code into the editor and start playing.</p>
+<div style="text-align:center;padding:20px 0;background:linear-gradient(135deg,#1a3a2e,#2d5a47);border-radius:16px;margin-bottom:24px;border:2px solid var(--accent);">
+  <span style="font-size:48px;display:block;margin-bottom:8px;">🎮</span>
+  <h1 style="margin-bottom:8px;">Retro Game Demos</h1>
+  <p style="font-size:15px;max-width:500px;margin:0 auto;">Charger un jeu retro, le code apparaît dans l'éditeur et le jeu se lance tout seul. Prêt à jouer ?</p>
+</div>
 
+<div class="demo-grid">
 ${Demos.map((demo, i) => `
-<h2 id="demo-${i}">${demo.name}</h2>
-<p>${demo.desc}</p>
-<button class="btn-run demo-run-btn" data-demo="${i}" style="margin-bottom:20px;padding:8px 20px;">▶ Load & Run ${demo.name}</button>
+<div class="demo-card">
+  <div class="demo-card-content">
+    <div class="demo-card-emoji">${['🕹️','🐍','👾','🧱','☄️','🏃'][i % 6]}</div>
+    <h3>${demo.name}</h3>
+    <p>${demo.desc}</p>
+    <button class="demo-play-btn" data-demo="${i}">▶ Jouer à ${demo.name}</button>
+  </div>
+</div>
 `).join('')}
+</div>
 `; }
 };
