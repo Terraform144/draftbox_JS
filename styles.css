@@ -923,7 +923,7 @@ html, body {
 .docs-subtab:hover { color: var(--text-primary); background: var(--bg-tertiary); }
 .docs-subtab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-.docs-subtab-content { display: none; height: 100%; flex-direction: column; }
+.docs-subtab-content { display: none; flex-direction: column; flex: 1; min-height: 0; }
 .docs-subtab-content.active { display: flex; }
 
 /* SOURCES PANEL */
