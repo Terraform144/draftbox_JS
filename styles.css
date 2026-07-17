@@ -734,6 +734,7 @@ html, body {
   flex: 1;
   overflow-y: auto;
   padding: 24px 32px;
+  padding-bottom: calc(24px + 56px + env(safe-area-inset-bottom));
   line-height: 1.7;
 }
 
@@ -1105,7 +1106,7 @@ html, body {
 
   .docs-nav { display: none; }
   .docs-nav-select { display: block; margin: 8px 12px; }
-  .docs-content { padding: 16px 20px; }
+  .docs-content { padding: 16px 20px; padding-bottom: calc(16px + 56px + env(safe-area-inset-bottom)); }
   .docs-content h1 { font-size: 24px; }
 
   .editor-right:not(.force-show) { display: none; }
@@ -1231,7 +1232,7 @@ html, body {
   .toolbar input[type="color"] { width: 32px; height: 28px; }
 
   .docs-nav { max-height: 140px; }
-  .docs-content { padding: 12px 14px; }
+  .docs-content { padding: 12px 14px; padding-bottom: calc(12px + 56px + env(safe-area-inset-bottom)); }
   .docs-content h1 { font-size: 20px; }
   .docs-content h2 { font-size: 16px; }
   .docs-content h3 { font-size: 14px; }
