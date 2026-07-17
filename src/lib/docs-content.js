@@ -1,96 +1,127 @@
 import Demos from './demos.js';
 
 const gettingStarted = `
-<h1>Welcome to DraftBox</h1>
-<p>DraftBox is a browser-based game creation tool. Design pixel art sprites, write JavaScript game code, and run your game directly in the browser — no setup required.</p>
+<h1>Bienvenue sur DraftBox</h1>
+<p>DraftBox est un outil de création de jeux dans le navigateur. Dessinez des sprites en pixel art, écrivez du code JavaScript et lancez votre jeu directement — aucune installation requise.</p>
 
-<h2>How It Works</h2>
+<h2>Comment ça marche</h2>
 <ol>
-  <li><strong>Pixel Editor</strong> — Draw pixel art sprites and save them with names.</li>
-  <li><strong>Code Editor</strong> — Write game logic in JavaScript using the DraftBox API.</li>
-  <li><strong>Scene</strong> — Run your game and see it come to life.</li>
-  <li><strong>Docs</strong> — Reference documentation and examples (you are here).</li>
+  <li><strong>Éditeur de Sprites</strong> — Dessinez des sprites en pixel art et sauvegardez-les avec un nom.</li>
+  <li><strong>Éditeur de Code</strong> — Écrivez la logique du jeu en JavaScript avec l'API DraftBox.</li>
+  <li><strong>Scène</strong> — Lancez votre jeu et regardez-le prendre vie.</li>
+  <li><strong>Doc</strong> — Documentation de référence et exemples (vous êtes ici).</li>
 </ol>
 
-<h2>Your First Game</h2>
-<p>Start with the default template in the Code Editor. It creates a player character and collectible coins. Click <strong>Run</strong> to play.</p>
+<h2>Votre Premier Jeu</h2>
+<p>Commencez avec le modèle par défaut dans l'éditeur de code. Il crée un personnage et des pièces à collecter. Cliquez sur <strong>Lancer</strong> pour jouer.</p>
 
 <div class="note">
-  <strong>Tip:</strong> Press <strong>Ctrl+Enter</strong> (or Cmd+Enter) to quickly run your game from the Code Editor.
+  <strong>Astuce :</strong> Appuyez sur <strong>Ctrl+Enter</strong> (ou Cmd+Enter) pour lancer rapidement votre jeu depuis l'éditeur de code.
 </div>
 
-<h2>Keyboard Shortcuts</h2>
+<h2>Raccourcis Clavier</h2>
 <ul>
-  <li><strong>Ctrl+Enter</strong> — Run game</li>
-  <li><strong>Ctrl+S</strong> — Save sprite in Pixel Editor</li>
-  <li><strong>Arrow keys / WASD</strong> — Control player in the default template</li>
+  <li><strong>Ctrl+Enter</strong> — Lancer le jeu</li>
+  <li><strong>Ctrl+S</strong> — Sauvegarder le sprite dans l'éditeur</li>
+  <li><strong>Flèches / WASD</strong> — Contrôler le joueur dans le modèle par défaut</li>
 </ul>
 `;
 
+const download = `
+<div class="apk-download-card">
+  <span style="font-size:52px;display:block;margin-bottom:10px;">📱</span>
+  <h1 style="margin-bottom:10px;">Emportez DraftBox partout</h1>
+  <p style="font-size:15px;max-width:480px;margin:0 auto 24px;opacity:0.9;">Installez l'application sur votre téléphone ou tablette Android et créez vos jeux même hors ligne. Rapide, léger, sans pub.</p>
+
+  <a href="/gameCreator.apk" download="gameCreator.apk" class="apk-download-btn">
+    <span class="apk-download-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+    </span>
+    <span class="apk-download-text">
+      <span class="apk-download-label">Télécharger sur</span>
+      <span class="apk-download-name">gameCreator.apk</span>
+    </span>
+  </a>
+
+  <p style="font-size:13px;opacity:0.6;margin-top:16px;">Android 7.0+ · ~4,7 Mo · Dernière build</p>
+</div>
+
+<h2>Comment installer</h2>
+<ol>
+  <li>Téléchargez <code>gameCreator.apk</code> avec le bouton ci-dessus depuis votre appareil Android.</li>
+  <li>Ouvrez le fichier téléchargé. Si Android bloque l'installation, autorisez <strong>« Installer des applications inconnues »</strong> pour votre navigateur dans les réglages.</li>
+  <li>Confirmez l'installation, puis lancez DraftBox depuis votre écran d'accueil. 🎉</li>
+</ol>
+
+<div class="note">
+  <strong>Astuce :</strong> L'APK n'est pas signé via le Play Store, c'est normal pour une build de développement — Android vous préviendra, il suffit de confirmer l'installation.
+</div>
+`;
+
 const gameLoop = `
-<h1>Game Loop</h1>
-<p>Every game needs a loop that runs continuously, updating logic and rendering frames. In DraftBox, you implement this with two functions:</p>
+<h1>Boucle de Jeu</h1>
+<p>Chaque jeu a besoin d'une boucle qui tourne en continu, mettant à jour la logique et affichant les images. Dans DraftBox, vous implémentez cela avec deux fonctions :</p>
 
 <h2>update(dt)</h2>
-<p>Called every frame. The <code>dt</code> parameter is the <strong>delta time</strong> in seconds since the last frame. Use it to make movement frame-rate independent.</p>
+<p>Appelée à chaque image. Le paramètre <code>dt</code> est le <strong>temps écoulé</strong> en secondes depuis la dernière image. Utilisez-le pour rendre les mouvements indépendants du framerate.</p>
 
-<pre><code>let speed = 200; // pixels per second
+<pre><code>let vitesse = 200; // pixels par seconde
 
 function update(dt) {
-  // Move 200 pixels every second, regardless of FPS
-  player.x += speed * dt;
+  // Se déplace de 200 pixels chaque seconde, peu importe le FPS
+  joueur.x += vitesse * dt;
 }</code></pre>
 
 <h2>draw(ctx)</h2>
-<p>Called every frame after <code>update()</code>. The <code>ctx</code> is the Canvas 2D rendering context. Clear the canvas each frame and draw everything.</p>
+<p>Appelée à chaque image après <code>update()</code>. Le <code>ctx</code> est le contexte de rendu Canvas 2D. Effacez le canvas et dessinez tout à chaque image.</p>
 
 <pre><code>function draw(ctx) {
-  // Clear the canvas
+  // Effacer le canvas
   ctx.fillStyle = '#1a1a2e';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Draw player
+  // Dessiner le joueur
   ctx.fillStyle = '#e94560';
-  ctx.fillRect(player.x, player.y, 32, 32);
+  ctx.fillRect(joueur.x, joueur.y, 32, 32);
 }</code></pre>
 
 <h2>init()</h2>
-<p>Called once when the game starts. Use it to set up initial state.</p>
+<p>Appelée une seule fois au démarrage du jeu. Utilisez-la pour initialiser l'état du jeu.</p>
 
-<pre><code>let enemies = [];
+<pre><code>let ennemis = [];
 
 function init() {
   for (let i = 0; i < 10; i++) {
-    enemies.push({
+    ennemis.push({
       x: rand(0, 900), y: rand(0, 500),
-      hp: 3
+      pdv: 3
     });
   }
 }</code></pre>
 
 <div class="note">
-  <strong>Important:</strong> The game loop runs at ~60 FPS using <code>requestAnimationFrame</code>. If your game is too fast, check that you're multiplying by <code>dt</code>.
+  <strong>Important :</strong> La boucle de jeu tourne à ~60 FPS avec <code>requestAnimationFrame</code>. Si votre jeu est trop rapide, vérifiez que vous multipliez bien par <code>dt</code>.
 </div>
 `;
 
 const canvasBasics = `
-<h1>Canvas 2D Basics</h1>
-<p>The <strong>Canvas 2D API</strong> is the primary way to draw graphics in the browser. The <code>draw(ctx)</code> function receives the 2D rendering context.</p>
+<h1>Canvas 2D — Les Bases</h1>
+<p>L'<strong>API Canvas 2D</strong> est la principale façon de dessiner des graphismes dans le navigateur. La fonction <code>draw(ctx)</code> reçoit le contexte de rendu 2D.</p>
 
-<h2>Shapes</h2>
+<h2>Formes</h2>
 
 <pre><code>// Rectangle
 ctx.fillStyle = 'red';
-ctx.fillRect(x, y, width, height);
-ctx.strokeRect(x, y, width, height); // outline only
+ctx.fillRect(x, y, largeur, hauteur);
+ctx.strokeRect(x, y, largeur, hauteur); // contour uniquement
 
-// Circle (using arc)
+// Cercle (avec arc)
 ctx.beginPath();
-ctx.arc(x, y, radius, 0, Math.PI * 2);
+ctx.arc(x, y, rayon, 0, Math.PI * 2);
 ctx.fill();
 ctx.stroke();
 
-// Line
+// Ligne
 ctx.beginPath();
 ctx.moveTo(x1, y1);
 ctx.lineTo(x2, y2);
@@ -98,178 +129,266 @@ ctx.strokeStyle = 'white';
 ctx.lineWidth = 2;
 ctx.stroke();</code></pre>
 
-<h2>Colors</h2>
-<pre><code>// Named colors
+<h2>Couleurs</h2>
+<pre><code>// Couleurs nommées
 ctx.fillStyle = 'red';
 ctx.fillStyle = 'blue';
 
-// Hex
+// Hexadécimal
 ctx.fillStyle = '#e94560';
 
-// RGBA (with transparency)
+// RGBA (avec transparence)
 ctx.fillStyle = 'rgba(233, 69, 96, 0.5)';
 
 // HSL
 ctx.fillStyle = 'hsl(0, 80%, 60%)';</code></pre>
 
-<h2>Text</h2>
+<h2>Texte</h2>
 <pre><code>ctx.fillStyle = 'white';
 ctx.font = '24px monospace';
-ctx.fillText('Hello, World!', x, y);
+ctx.fillText('Bonjour !', x, y);
 
-// Text alignment
+// Alignement du texte
 ctx.textAlign = 'center'; // 'left', 'center', 'right'
 ctx.textBaseline = 'middle'; // 'top', 'middle', 'bottom'
 
-// Score display
+// Affichage du score
 ctx.font = 'bold 20px monospace';
 ctx.fillStyle = '#ffd700';
-ctx.fillText('Score: ' + score, 16, 32);</code></pre>
+ctx.fillText('Score : ' + score, 16, 32);</code></pre>
 
-<h2>Transforms</h2>
-<pre><code>// Save/restore state
+<h2>Transformations</h2>
+<pre><code>// Sauvegarder/restaurer l'état
 ctx.save();
 ctx.translate(x, y);
 ctx.rotate(angle);
-ctx.scale(1, -1); // flip vertically
-// ... draw ...
+ctx.scale(1, -1); // retourner verticalement
+// ... dessiner ...
 ctx.restore();</code></pre>
 
-<h2>Clear Canvas</h2>
+<h2>Effacer le Canvas</h2>
 <pre><code>ctx.fillStyle = '#0f0f23';
 ctx.fillRect(0, 0, canvas.width, canvas.height);</code></pre>
 `;
 
-const sprites = `
-<h1>Sprites & Images</h1>
-<p>Sprites are pixel art images you create in the Pixel Editor. They are available in your game code through the <code>sprites</code> object.</p>
+const canvas3DBasics = `
+<h1>Canvas 3D — Les Bases</h1>
+<p>Vous pouvez afficher des graphismes 3D sur un canvas 2D en utilisant une <strong>projection manuelle</strong>. Définissez des points 3D, appliquez une rotation, puis projetez-les en coordonnées 2D à l'écran.</p>
 
-<h2>Using Sprites</h2>
-<p>Each sprite you save in the Pixel Editor becomes a <strong>canvas element</strong> accessible by name.</p>
+<h2>Sommets et Arêtes</h2>
+<p>Un cube est composé de 8 points (sommets) reliés par 12 lignes (arêtes) :</p>
+<pre><code>const sommets = [
+  [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+  [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]
+];
+const aretes = [
+  [0,1],[1,2],[2,3],[3,0],
+  [4,5],[5,6],[6,7],[7,4],
+  [0,4],[1,5],[2,6],[3,7]
+];</code></pre>
 
-<pre><code>// Draw sprite at original size
-ctx.drawImage(sprites.player, x, y);
+<h2>Rotation</h2>
+<p>Rotation de chaque sommet autour des axes X et Y avec sin/cos :</p>
+<pre><code>let y1 = y * Math.cos(ax) - z * Math.sin(ax);
+let z1 = y * Math.sin(ax) + z * Math.cos(ax);
+let x2 = x * Math.cos(ay) + z1 * Math.sin(ay);
+let z2 = -x * Math.sin(ay) + z1 * Math.cos(ay);</code></pre>
 
-// Draw sprite scaled
-ctx.drawImage(sprites.player, x, y, width, height);
+<h2>Projection Perspective</h2>
+<p>Conversion 3D vers 2D. Les points éloignés apparaissent plus petits :</p>
+<pre><code>const echelle = longueurFocale / (longueurFocale + z);
+const xEcran = cx + x * echelle;
+const yEcran = cy + y * echelle;</code></pre>
 
-// Draw sprite flipped
-ctx.save();
-ctx.scale(-1, 1);
-ctx.drawImage(sprites.player, -x - width, y, width, height);
-ctx.restore();</code></pre>
+<h2>Exemple Complet</h2>
+<p>Un cube rouge en fil de fer qui tourne sur lui-même. Utilise le pattern standard <code>update(dt)</code> / <code>draw(ctx)</code> :</p>
+<pre><code>// CUBE 3D EN FIL DE FER
+let angleX = 0, angleY = 0;
+const V = 140;
 
-<h2>Creating Sprites</h2>
-<ol>
-  <li>Go to the <strong>Pixel Editor</strong> tab.</li>
-  <li>Draw your pixel art using the brush tools.</li>
-  <li>Type a name in the sprite name field (e.g., <code>player</code>).</li>
-  <li>Click <strong>Save Sprite</strong>. Your sprite appears in the sprite list.</li>
-  <li>In your code, use <code>sprites.player</code> to reference it.</li>
-</ol>
-
-<h2>Simple Animation</h2>
-<p>Create multiple sprites (e.g., <code>player_run1</code>, <code>player_run2</code>) and swap between them.</p>
-
-<pre><code>let frameIndex = 0;
-let frameTimer = 0;
+const sommets = [
+  [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+  [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]
+];
+const aretes = [
+  [0,1],[1,2],[2,3],[3,0],
+  [4,5],[5,6],[6,7],[7,4],
+  [0,4],[1,5],[2,6],[3,7]
+];
 
 function update(dt) {
-  frameTimer += dt;
-  if (frameTimer > 0.15) {
-    frameTimer = 0;
-    frameIndex = (frameIndex + 1) % 2;
+  angleX += 1.0 * dt;
+  angleY += 1.5 * dt;
+}
+
+function draw(ctx) {
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const cosX = Math.cos(angleX), sinX = Math.sin(angleX);
+  const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const projete = sommets.map(([x, y, z]) =&gt; {
+    let y1 = y*cosX - z*sinX, z1 = y*sinX + z*cosX;
+    let x2 = x*cosY + z1*sinY, z2 = -x*sinY + z1*cosY;
+    const s = 300 / (300 + z2 * V);
+    return [cx + x2*V*s, cy + y1*V*s];
+  });
+  ctx.strokeStyle = '#e94560';
+  ctx.lineWidth = 2.5;
+  aretes.forEach(([a, b]) =&gt; {
+    ctx.beginPath();
+    ctx.moveTo(projete[a][0], projete[a][1]);
+    ctx.lineTo(projete[b][0], projete[b][1]);
+    ctx.stroke();
+  });
+}</code></pre>
+
+<div style="text-align:center;margin:24px 0;">
+  <button class="demo-play-btn" data-demo="6" style="padding:12px 28px;font-size:16px;font-weight:bold;background:linear-gradient(135deg,#e94560,#c23152);color:white;border:none;border-radius:8px;cursor:pointer;">▶ Exécuter l'exemple</button>
+</div>
+
+<h2>Cube Contrôlé par la Souris</h2>
+<p>Au lieu d'une rotation automatique, associez la position de la souris aux angles de rotation. Déplacez la souris sur le canvas pour faire tourner le cube dans toutes les directions :</p>
+<pre><code>// Convertir la position de la souris en angles
+const angleX = (mouse.y / canvas.height - 0.5) * Math.PI;
+const angleY = (mouse.x / canvas.width - 0.5) * Math.PI * 2;</code></pre>
+<p>L'objet <code>mouse</code> fournit <code>mouse.x</code> et <code>mouse.y</code> en coordonnées canvas (0–960, 0–540). Le centre du canvas donne une rotation nulle ; en déplaçant vers les bords, le cube tourne.</p>
+
+<div style="text-align:center;margin:24px 0;">
+  <button class="demo-play-btn" data-demo="7" style="padding:12px 28px;font-size:16px;font-weight:bold;background:linear-gradient(135deg,#e94560,#c23152);color:white;border:none;border-radius:8px;cursor:pointer;">▶ Exécuter l'exemple (souris)</button>
+</div>
+`;
+
+const sprites = `
+<h1>Sprites &amp; Images</h1>
+<p>Les sprites sont des images en pixel art que vous créez dans l'éditeur de sprites. Ils sont disponibles dans votre code via l'objet <code>sprites</code>.</p>
+
+<h2>Utiliser les Sprites</h2>
+<p>Chaque sprite sauvegardé dans l'éditeur devient un <strong>élément canvas</strong> accessible par son nom.</p>
+
+<pre><code>// Dessiner le sprite à sa taille d'origine
+ctx.drawImage(sprites.joueur, x, y);
+
+// Dessiner le sprite redimensionné
+ctx.drawImage(sprites.joueur, x, y, largeur, hauteur);
+
+// Dessiner le sprite retourné
+ctx.save();
+ctx.scale(-1, 1);
+ctx.drawImage(sprites.joueur, -x - largeur, y, largeur, hauteur);
+ctx.restore();</code></pre>
+
+<h2>Créer des Sprites</h2>
+<ol>
+  <li>Allez dans l'onglet <strong>Éditeur de Sprites</strong>.</li>
+  <li>Dessinez votre pixel art avec les outils de pinceau.</li>
+  <li>Tapez un nom dans le champ de nom du sprite (ex. : <code>joueur</code>).</li>
+  <li>Cliquez sur <strong>Sauvegarder</strong>. Votre sprite apparaît dans la liste.</li>
+  <li>Dans votre code, utilisez <code>sprites.joueur</code> pour y accéder.</li>
+</ol>
+
+<h2>Animation Simple</h2>
+<p>Créez plusieurs sprites (ex. : <code>joueur_run1</code>, <code>joueur_run2</code>) et alternez entre eux.</p>
+
+<pre><code>let indexFrame = 0;
+let timerFrame = 0;
+
+function update(dt) {
+  timerFrame += dt;
+  if (timerFrame > 0.15) {
+    timerFrame = 0;
+    indexFrame = (indexFrame + 1) % 2;
   }
 }
 
 function draw(ctx) {
-  const frame = frameIndex === 0 ? 'player_run1' : 'player_run2';
-  ctx.drawImage(sprites[frame], player.x, player.y, 32, 32);
+  const frame = indexFrame === 0 ? 'joueur_run1' : 'joueur_run2';
+  ctx.drawImage(sprites[frame], joueur.x, joueur.y, 32, 32);
 }</code></pre>
 
-<h2>Loading External Images</h2>
-<p>You can also load images from URLs using <code>Image</code> objects.</p>
+<h2>Charger des Images Externes</h2>
+<p>Vous pouvez aussi charger des images depuis des URLs avec des objets <code>Image</code>.</p>
 
 <pre><code>const img = new Image();
-img.src = 'https://example.com/sprite.png';
-// Wait for load, then use in draw():
+img.src = 'https://exemple.com/sprite.png';
+// Attendre le chargement, puis l'utiliser dans draw() :
 // ctx.drawImage(img, x, y);</code></pre>
 `;
 
 const input = `
-<h1>Input Handling</h1>
-<p>DraftBox provides keyboard and mouse state through the <code>keys</code> and <code>mouse</code> objects.</p>
+<h1>Gestion des Entrées</h1>
+<p>DraftBox fournit l'état du clavier et de la souris via les objets <code>keys</code> et <code>mouse</code>.</p>
 
-<h2>Keyboard</h2>
-<p>The <code>keys</code> object maps <strong>key codes</strong> to boolean values. <code>true</code> means the key is currently pressed.</p>
+<h2>Clavier</h2>
+<p>L'objet <code>keys</code> associe des <strong>codes de touches</strong> à des valeurs booléennes. <code>true</code> signifie que la touche est actuellement enfoncée.</p>
 
 <pre><code>function update(dt) {
-  // Arrow keys
-  if (keys.ArrowLeft)  player.x -= speed * dt;
-  if (keys.ArrowRight) player.x += speed * dt;
-  if (keys.ArrowUp)    player.y -= speed * dt;
-  if (keys.ArrowDown)  player.y += speed * dt;
+  // Flèches directionnelles
+  if (keys.ArrowLeft)  joueur.x -= vitesse * dt;
+  if (keys.ArrowRight) joueur.x += vitesse * dt;
+  if (keys.ArrowUp)    joueur.y -= vitesse * dt;
+  if (keys.ArrowDown)  joueur.y += vitesse * dt;
 
   // WASD
-  if (keys.KeyW) player.y -= speed * dt;
-  if (keys.KeyA) player.x -= speed * dt;
-  if (keys.KeyS) player.y += speed * dt;
-  if (keys.KeyD) player.x += speed * dt;
+  if (keys.KeyW) joueur.y -= vitesse * dt;
+  if (keys.KeyA) joueur.x -= vitesse * dt;
+  if (keys.KeyS) joueur.y += vitesse * dt;
+  if (keys.KeyD) joueur.x += vitesse * dt;
 
-  // Space, Enter, Shift
-  if (keys.Space)  shoot();
-  if (keys.Enter)  startGame();
-  if (keys.ShiftLeft) run();
+  // Espace, Entrée, Shift
+  if (keys.Space)  tirer();
+  if (keys.Enter)  demarrerJeu();
+  if (keys.ShiftLeft) courir();
 }</code></pre>
 
-<h2>Mouse</h2>
-<p>The <code>mouse</code> object provides cursor position and button state.</p>
+<h2>Souris</h2>
+<p>L'objet <code>mouse</code> fournit la position du curseur et l'état des boutons.</p>
 
 <pre><code>function draw(ctx) {
-  // Draw cursor position
+  // Afficher la position du curseur
   ctx.fillStyle = 'white';
   ctx.fillText(mouse.x + ', ' + mouse.y, mouse.x + 10, mouse.y - 10);
 
-  // Draw crosshair at mouse position
+  // Dessiner un réticule à la position de la souris
   ctx.beginPath();
   ctx.arc(mouse.x, mouse.y, 5, 0, Math.PI * 2);
   ctx.fill();
 
-  // Shoot on click
+  // Tirer au clic
   if (mouse.left) {
-    // mouse.x, mouse.y is where the player clicked
+    // mouse.x, mouse.y correspond à l'endroit où le joueur a cliqué
   }
 }</code></pre>
 
-<h2>Common Key Codes</h2>
+<h2>Codes de Touches Courants</h2>
 <ul>
-  <li><strong>Letters:</strong> <code>KeyA</code> through <code>KeyZ</code></li>
-  <li><strong>Numbers:</strong> <code>Digit0</code> through <code>Digit9</code></li>
-  <li><strong>Arrows:</strong> <code>ArrowUp</code>, <code>ArrowDown</code>, <code>ArrowLeft</code>, <code>ArrowRight</code></li>
-  <li><strong>Others:</strong> <code>Space</code>, <code>Enter</code>, <code>ShiftLeft</code>, <code>ShiftRight</code>, <code>ControlLeft</code>, <code>Escape</code></li>
+  <li><strong>Lettres :</strong> <code>KeyA</code> à <code>KeyZ</code></li>
+  <li><strong>Chiffres :</strong> <code>Digit0</code> à <code>Digit9</code></li>
+  <li><strong>Flèches :</strong> <code>ArrowUp</code>, <code>ArrowDown</code>, <code>ArrowLeft</code>, <code>ArrowRight</code></li>
+  <li><strong>Autres :</strong> <code>Space</code>, <code>Enter</code>, <code>ShiftLeft</code>, <code>ShiftRight</code>, <code>ControlLeft</code>, <code>Escape</code></li>
 </ul>
 `;
 
 const collision = `
-<h1>Collision Detection</h1>
-<p>Collision detection is essential for games. DraftBox provides a <code>rectCollide</code> helper for axis-aligned bounding box (AABB) collisions.</p>
+<h1>Détection de Collisions</h1>
+<p>La détection de collisions est essentielle pour les jeux. DraftBox fournit une fonction <code>rectCollide</code> pour les collisions axis-aligned bounding box (AABB).</p>
 
-<h2>Rectangle (AABB) Collision</h2>
-<pre><code>const player = { x: 100, y: 100, w: 32, h: 32 };
-const enemy  = { x: 120, y: 110, w: 30, h: 30 };
+<h2>Collision Rectangle (AABB)</h2>
+<pre><code>const joueur = { x: 100, y: 100, w: 32, h: 32 };
+const ennemi  = { x: 120, y: 110, w: 30, h: 30 };
 
 function update(dt) {
-  if (rectCollide(player, enemy)) {
-    // Collision detected!
-    player.hp -= 1;
+  if (rectCollide(joueur, ennemi)) {
+    // Collision détectée !
+    joueur.pdv -= 1;
   }
 }
 
-// rectCollide checks if two rectangles overlap.
-// Each rect needs: { x, y, w, h }
+// rectCollide vérifie si deux rectangles se chevauchent.
+// Chaque rectangle nécessite : { x, y, w, h }
 </code></pre>
 
-<h2>Manual AABB Test</h2>
+<h2>Test AABB Manuel</h2>
 <pre><code>function aabb(a, b) {
   return a.x < b.x + b.w &&
          a.x + a.w > b.x &&
@@ -277,175 +396,175 @@ function update(dt) {
          a.y + a.h > b.y;
 }</code></pre>
 
-<h2>Circle Collision</h2>
-<pre><code>function circleCollide(a, b) {
+<h2>Collision Circulaire</h2>
+<pre><code>function collisionCercle(a, b) {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
-  return dist < a.radius + b.radius;
+  return dist < a.rayon + b.rayon;
 }
 
-// Usage:
-const player = { x: 100, y: 100, radius: 16 };
-const coin   = { x: 120, y: 110, radius: 8 };
-if (circleCollide(player, coin)) collectCoin();</code></pre>
+// Utilisation :
+const joueur = { x: 100, y: 100, rayon: 16 };
+const piece   = { x: 120, y: 110, rayon: 8 };
+if (collisionCercle(joueur, piece)) collecterPiece();</code></pre>
 
-<h2>Point in Rectangle</h2>
-<pre><code>function pointInRect(px, py, rect) {
+<h2>Point dans un Rectangle</h2>
+<pre><code>function pointDansRect(px, py, rect) {
   return px >= rect.x && px <= rect.x + rect.w &&
          py >= rect.y && py <= rect.y + rect.h;
 }
 
-// Check if mouse is over a button
-if (pointInRect(mouse.x, mouse.y, button)) {
-  // Hover effect
+// Vérifier si la souris est sur un bouton
+if (pointDansRect(mouse.x, mouse.y, bouton)) {
+  // Effet de survol
 }</code></pre>
 
-<h2>Collision Response</h2>
-<p>When objects collide, you typically either:</p>
+<h2>Réponse aux Collisions</h2>
+<p>Quand des objets entrent en collision, vous pouvez généralement :</p>
 <ul>
-  <li><strong>Push out</strong> — move the player so they're no longer overlapping</li>
-  <li><strong>Damage</strong> — reduce HP, destroy the object</li>
-  <li><strong>Bounce</strong> — reverse velocity</li>
-  <li><strong>Collect</strong> — pick up the item</li>
+  <li><strong>Éjection</strong> — déplacer le joueur pour qu'il ne se chevauche plus</li>
+  <li><strong>Dégâts</strong> — réduire les PDV, détruire l'objet</li>
+  <li><strong>Rebond</strong> — inverser la vitesse</li>
+  <li><strong>Collecte</strong> — ramasser l'objet</li>
 </ul>
 
-<pre><code>function pushOut(player, wall) {
-  const overlapX = Math.min(player.x + player.w, wall.x + wall.w) -
-                   Math.max(player.x, wall.x);
-  const overlapY = Math.min(player.y + player.h, wall.y + wall.h) -
-                   Math.max(player.y, wall.y);
+<pre><code>function ejecter(joueur, mur) {
+  const chevX = Math.min(joueur.x + joueur.w, mur.x + mur.w) -
+                   Math.max(joueur.x, mur.x);
+  const chevY = Math.min(joueur.y + joueur.h, mur.y + mur.h) -
+                   Math.max(joueur.y, mur.y);
 
-  if (overlapX < overlapY) {
-    if (player.x < wall.x) player.x = wall.x - player.w;
-    else player.x = wall.x + wall.w;
+  if (chevX < chevY) {
+    if (joueur.x < mur.x) joueur.x = mur.x - joueur.w;
+    else joueur.x = mur.x + mur.w;
   } else {
-    if (player.y < wall.y) player.y = wall.y - player.h;
-    else player.y = wall.y + wall.h;
+    if (joueur.y < mur.y) joueur.y = mur.y - joueur.h;
+    else joueur.y = mur.y + mur.h;
   }
 }</code></pre>
 `;
 
 const physics = `
-<h1>Simple Physics</h1>
-<p>Add basic physics to your games — gravity, velocity, and bouncing.</p>
+<h1>Physique Simple</h1>
+<p>Ajoutez de la physique de base à vos jeux — gravité, vitesse et rebonds.</p>
 
-<h2>Velocity & Movement</h2>
-<pre><code>let player = {
+<h2>Vitesse et Déplacement</h2>
+<pre><code>let joueur = {
   x: 400, y: 300,
   vx: 0, vy: 0,
   w: 32, h: 32
 };
 
 function update(dt) {
-  // Apply gravity
-  player.vy += 800 * dt; // 800 px/s²
+  // Appliquer la gravité
+  joueur.vy += 800 * dt; // 800 px/s²
 
-  // Update position
-  player.x += player.vx * dt;
-  player.y += player.vy * dt;
+  // Mettre à jour la position
+  joueur.x += joueur.vx * dt;
+  joueur.y += joueur.vy * dt;
 
-  // Ground collision
-  if (player.y + player.h > canvas.height) {
-    player.y = canvas.height - player.h;
-    player.vy = 0;
+  // Collision avec le sol
+  if (joueur.y + joueur.h > canvas.height) {
+    joueur.y = canvas.height - joueur.h;
+    joueur.vy = 0;
   }
 
-  // Jump
-  if (keys.Space && player.vy === 0) {
-    player.vy = -400; // Jump velocity
+  // Saut
+  if (keys.Space && joueur.vy === 0) {
+    joueur.vy = -400; // Vitesse de saut
   }
 }</code></pre>
 
-<h2>Friction</h2>
+<h2>Frottement</h2>
 <pre><code>function update(dt) {
-  // Horizontal movement
-  if (keys.ArrowLeft)  player.vx = -200;
-  else if (keys.ArrowRight) player.vx = 200;
-  else player.vx *= 0.9; // Friction (slows down)
+  // Déplacement horizontal
+  if (keys.ArrowLeft)  joueur.vx = -200;
+  else if (keys.ArrowRight) joueur.vx = 200;
+  else joueur.vx *= 0.9; // Frottement (ralentit)
 
-  player.x += player.vx * dt;
+  joueur.x += joueur.vx * dt;
 }</code></pre>
 
-<h2>Bouncing</h2>
+<h2>Rebond</h2>
 <pre><code>function update(dt) {
-  ball.vy += 500 * dt;
-  ball.y += ball.vy * dt;
+  balle.vy += 500 * dt;
+  balle.y += balle.vy * dt;
 
-  if (ball.y + ball.radius > canvas.height) {
-    ball.y = canvas.height - ball.radius;
-    ball.vy *= -0.7; // Bounce with energy loss
+  if (balle.y + balle.rayon > canvas.height) {
+    balle.y = canvas.height - balle.rayon;
+    balle.vy *= -0.7; // Rebond avec perte d'énergie
   }
 }</code></pre>
 
-<h2>Platformer Physics</h2>
-<pre><code>let player = {
+<h2>Physique de Plateforme</h2>
+<pre><code>let joueur = {
   x: 100, y: 300, w: 28, h: 32,
   vx: 0, vy: 0,
-  onGround: false,
-  jumpCount: 0
+  auSol: false,
+  compteurSaut: 0
 };
 
 function update(dt) {
   // Horizontal
-  if (keys.ArrowLeft)  player.vx = -250;
-  else if (keys.ArrowRight) player.vx = 250;
-  else player.vx *= 0.85;
+  if (keys.ArrowLeft)  joueur.vx = -250;
+  else if (keys.ArrowRight) joueur.vx = 250;
+  else joueur.vx *= 0.85;
 
-  // Gravity
-  player.vy += 900 * dt;
-  if (player.vy > 600) player.vy = 600;
+  // Gravité
+  joueur.vy += 900 * dt;
+  if (joueur.vy > 600) joueur.vy = 600;
 
-  // Jump
-  if (keys.Space && player.onGround) {
-    player.vy = -400;
-    player.onGround = false;
+  // Saut
+  if (keys.Space && joueur.auSol) {
+    joueur.vy = -400;
+    joueur.auSol = false;
   }
 
-  // Apply velocity
-  player.x += player.vx * dt;
-  player.y += player.vy * dt;
+  // Appliquer la vitesse
+  joueur.x += joueur.vx * dt;
+  joueur.y += joueur.vy * dt;
 
-  // Ground
-  if (player.y + player.h > canvas.height) {
-    player.y = canvas.height - player.h;
-    player.vy = 0;
-    player.onGround = true;
+  // Sol
+  if (joueur.y + joueur.h > canvas.height) {
+    joueur.y = canvas.height - joueur.h;
+    joueur.vy = 0;
+    joueur.auSol = true;
   }
 }</code></pre>
 `;
 
 const audio = `
-<h1>Audio & Sound</h1>
-<p>Use the <code>audio(name)</code> function to play sounds. DraftBox uses the Web Audio API for sound playback.</p>
+<h1>Audio &amp; Son</h1>
+<p>Utilisez la fonction <code>audio(nom)</code> pour jouer des sons. DraftBox utilise l'API Web Audio pour la lecture audio.</p>
 
-<h2>Playing Sounds</h2>
+<h2>Jouer des Sons</h2>
 <pre><code>function update(dt) {
   if (keys.Space) {
-    audio('jump'); // Plays a sound file named 'jump'
-    player.vy = -400;
+    audio('saut'); // Joue le fichier son nommé 'saut'
+    joueur.vy = -400;
   }
 }
 
-// When collecting a coin:
-function collectCoin() {
-  audio('coin');
+// Quand on collecte une pièce :
+function collecterPiece() {
+  audio('piece');
   score++;
 }</code></pre>
 
-<h2>Supported Formats</h2>
-<p>Browsers support these audio formats:</p>
+<h2>Formats Supportés</h2>
+<p>Les navigateurs supportent ces formats audio :</p>
 <ul>
-  <li><strong>MP3</strong> (.mp3) — widely supported</li>
-  <li><strong>OGG</strong> (.ogg) — open format, good quality</li>
-  <li><strong>WAV</strong> (.wav) — uncompressed, large files</li>
-  <li><strong>M4A/AAC</strong> (.m4a) — good compression</li>
+  <li><strong>MP3</strong> (.mp3) — largement supporté</li>
+  <li><strong>OGG</strong> (.ogg) — format ouvert, bonne qualité</li>
+  <li><strong>WAV</strong> (.wav) — non compressé, fichiers volumineux</li>
+  <li><strong>M4A/AAC</strong> (.m4a) — bonne compression</li>
 </ul>
 
-<h2>Generating Sounds Programmatically</h2>
-<p>You can create simple sounds using the Web Audio API directly:</p>
+<h2>Générer des Sons Programmétiquement</h2>
+<p>Vous pouvez créer des sons simples directement avec l'API Web Audio :</p>
 
-<pre><code>function beep(freq = 440, duration = 0.1) {
+<pre><code>function bip(freq = 440, duree = 0.1) {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -454,95 +573,95 @@ function collectCoin() {
   osc.frequency.value = freq;
   osc.type = 'square';
   gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duree);
   osc.start();
-  osc.stop(audioCtx.currentTime + duration);
+  osc.stop(audioCtx.currentTime + duree);
 }</code></pre>
 
 <div class="note">
-  <strong>Note:</strong> Modern browsers require a user interaction (click/keypress) before playing audio. The first click in your game will unlock the audio system.
+  <strong>Note :</strong> Les navigateurs modernes nécessitent une interaction utilisateur (clic/appui touche) avant de pouvoir jouer de l'audio. Le premier clic dans votre jeu débloquera le système audio.
 </div>
 `;
 
 const gameState = `
-<h1>Game State Management</h1>
-<p>Most games have different screens: menus, gameplay, game over, etc. Manage this with a simple state machine.</p>
+<h1>Gestion de l'État du Jeu</h1>
+<p>La plupart des jeux ont différents écrans : menus, gameplay, game over, etc. Gérez cela avec une machine à états simple.</p>
 
-<h2>State Machine</h2>
-<pre><code>const STATE = {
+<h2>Machine à États</h2>
+<pre><code>const ETAT = {
   MENU: 'menu',
-  PLAYING: 'playing',
-  GAME_OVER: 'gameOver'
+  EN_JEU: 'enJeu',
+  FIN_DE_PARTIE: 'finDePartie'
 };
 
-let state = STATE.MENU;
+let etat = ETAT.MENU;
 
 function update(dt) {
-  switch (state) {
-    case STATE.MENU:
-      if (keys.Enter) state = STATE.PLAYING;
+  switch (etat) {
+    case ETAT.MENU:
+      if (keys.Enter) etat = ETAT.EN_JEU;
       break;
 
-    case STATE.PLAYING:
-      // Normal game logic
-      if (player.hp <= 0) state = STATE.GAME_OVER;
+    case ETAT.EN_JEU:
+      // Logique normale du jeu
+      if (joueur.pdv <= 0) etat = ETAT.FIN_DE_PARTIE;
       break;
 
-    case STATE.GAME_OVER:
+    case ETAT.FIN_DE_PARTIE:
       if (keys.Enter) {
-        resetGame();
-        state = STATE.MENU;
+        reinitialiserJeu();
+        etat = ETAT.MENU;
       }
       break;
   }
 }
 
 function draw(ctx) {
-  switch (state) {
-    case STATE.MENU:
-      drawMenu(ctx);
+  switch (etat) {
+    case ETAT.MENU:
+      dessinerMenu(ctx);
       break;
-    case STATE.PLAYING:
-      drawGame(ctx);
+    case ETAT.EN_JEU:
+      dessinerJeu(ctx);
       break;
-    case STATE.GAME_OVER:
-      drawGameOver(ctx);
+    case ETAT.FIN_DE_PARTIE:
+      dessinerFinDePartie(ctx);
       break;
   }
 }</code></pre>
 
-<h2>Levels</h2>
-<pre><code>let level = 1;
-let maxLevel = 10;
+<h2>Niveaux</h2>
+<pre><code>let niveau = 1;
+let maxNiveau = 10;
 
-function nextLevel() {
-  level++;
-  if (level > maxLevel) {
-    state = STATE.VICTORY;
+function niveauSuivant() {
+  niveau++;
+  if (niveau > maxNiveau) {
+    etat = ETAT.VICTOIRE;
   } else {
-    initLevel(level);
+    initialiserNiveau(niveau);
   }
 }</code></pre>
 
-<h2>Score Persistence</h2>
-<pre><code>// Save high score
-function saveHighScore(score) {
-  localStorage.setItem('highscore', score);
+<h2>Persistance du Score</h2>
+<pre><code>// Sauvegarder le meilleur score
+function sauvegarderMeilleurScore(score) {
+  localStorage.setItem('meilleurScore', score);
 }
 
-// Load high score
-function loadHighScore() {
-  return parseInt(localStorage.getItem('highscore')) || 0;
+// Charger le meilleur score
+function chargerMeilleurScore() {
+  return parseInt(localStorage.getItem('meilleurScore')) || 0;
 }</code></pre>
 `;
 
 const tilemaps = `
 <h1>Tilemaps</h1>
-<p>Tilemaps let you create levels using a grid of tiles. Each tile has a type (wall, floor, etc.).</p>
+<p>Les tilemaps vous permettent de créer des niveaux avec une grille de tuiles. Chaque tuile a un type (mur, sol, etc.).</p>
 
-<h2>Simple Tilemap</h2>
-<pre><code>const TILE_SIZE = 32;
-const map = [
+<h2>Tilemap Simple</h2>
+<pre><code>const TAILLE_TUILE = 32;
+const carte = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -556,69 +675,69 @@ const map = [
 ];
 
 function draw(ctx) {
-  for (let row = 0; row < map.length; row++) {
-    for (let col = 0; col < map[row].length; col++) {
-      const tile = map[row][col];
-      if (tile === 1) {
+  for (let ligne = 0; ligne < carte.length; ligne++) {
+    for (let col = 0; col < carte[ligne].length; col++) {
+      const tuile = carte[ligne][col];
+      if (tuile === 1) {
         ctx.fillStyle = '#16213e';
-        ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        ctx.fillRect(col * TAILLE_TUILE, ligne * TAILLE_TUILE, TAILLE_TUILE, TAILLE_TUILE);
         ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-        ctx.strokeRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        ctx.strokeRect(col * TAILLE_TUILE, ligne * TAILLE_TUILE, TAILLE_TUILE, TAILLE_TUILE);
       } else {
         ctx.fillStyle = '#0f0f23';
-        ctx.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        ctx.fillRect(col * TAILLE_TUILE, ligne * TAILLE_TUILE, TAILLE_TUILE, TAILLE_TUILE);
       }
     }
   }
 }
 
-// Collision with tiles
-function getTile(x, y) {
-  const col = Math.floor(x / TILE_SIZE);
-  const row = Math.floor(y / TILE_SIZE);
-  if (row < 0 || row >= map.length || col < 0 || col >= map[0].length) return 1;
-  return map[row][col];
+// Collision avec les tuiles
+function getTuile(x, y) {
+  const col = Math.floor(x / TAILLE_TUILE);
+  const ligne = Math.floor(y / TAILLE_TUILE);
+  if (ligne < 0 || ligne >= carte.length || col < 0 || col >= carte[0].length) return 1;
+  return carte[ligne][col];
 }
 
-function canMove(x, y, w, h) {
-  return getTile(x, y) === 0 &&
-         getTile(x + w - 1, y) === 0 &&
-         getTile(x, y + h - 1) === 0 &&
-         getTile(x + w - 1, y + h - 1) === 0;
+function peutBouger(x, y, w, h) {
+  return getTuile(x, y) === 0 &&
+         getTuile(x + w - 1, y) === 0 &&
+         getTuile(x, y + h - 1) === 0 &&
+         getTuile(x + w - 1, y + h - 1) === 0;
 }</code></pre>
 `;
 
 const animation = `
 <h1>Animation</h1>
-<p>Create frame-by-frame animations by cycling through sprites or using transformation effects.</p>
+<p>Créez des animations image par image en alternant les sprites ou en utilisant des effets de transformation.</p>
 
-<h2>Sprite Animation (Frame Cycling)</h2>
-<pre><code>let animFrame = 0;
-let animTimer = 0;
-const frameCount = 4; // player_walk1, player_walk2, etc.
+<h2>Animation de Sprite (Alternance d'Images)</h2>
+<pre><code>let frameAnim = 0;
+let timerAnim = 0;
+const nbFrames = 4; // joueur_walk1, joueur_walk2, etc.
 
 function update(dt) {
-  animTimer += dt;
-  if (animTimer >= 0.12) {
-    animTimer -= 0.12;
-    animFrame = (animFrame + 1) % frameCount;
+  timerAnim += dt;
+  if (timerAnim >= 0.12) {
+    timerAnim -= 0.12;
+    frameAnim = (frameAnim + 1) % nbFrames;
   }
 }
 
 function draw(ctx) {
-  const name = 'player_walk' + (animFrame + 1);
-  ctx.drawImage(sprites[name], player.x, player.y, 32, 32);
+  const nom = 'joueur_walk' + (frameAnim + 1);
+  ctx.drawImage(sprites[nom], joueur.x, joueur.y, 32, 32);
 }</code></pre>
 
-<h2>Tweening / Interpolation</h2>
+<h2>Interpolation (Tweening)</h2>
 <pre><code>function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
 let camera = { x: 0, y: 0 };
 function update(dt) {
-  camera.x = lerp(camera.x, player.x - 400, 0.05);
-  camera.y = lerp(camera.y, player.y - 250, 0.05);
+  camera.x = lerp(camera.x, joueur.x - 400, 0.05);
+  camera.y = lerp(camera.y, joueur.y - 250, 0.05);
 }
 
 function draw(ctx) {
@@ -627,113 +746,113 @@ function draw(ctx) {
   ctx.restore();
 }</code></pre>
 
-<h2>Opacity / Fade Effects</h2>
-<pre><code>let fadeAlpha = 0;
-let fading = false;
+<h2>Opacité / Effets de Fondu</h2>
+<pre><code>let alphaFondu = 0;
+let enFondu = false;
 
-function startFade() { fading = true; fadeAlpha = 0; }
+function demarrerFondu() { enFondu = true; alphaFondu = 0; }
 
 function update(dt) {
-  if (fading) {
-    fadeAlpha += dt * 0.5;
-    if (fadeAlpha >= 1) fading = false;
+  if (enFondu) {
+    alphaFondu += dt * 0.5;
+    if (alphaFondu >= 1) enFondu = false;
   }
 }
 
 function draw(ctx) {
-  if (fading) {
-    ctx.fillStyle = 'rgba(0, 0, 0, ' + fadeAlpha + ')';
+  if (enFondu) {
+    ctx.fillStyle = 'rgba(0, 0, 0, ' + alphaFondu + ')';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 }</code></pre>
 
-<h2>Sprite Flip (Direction)</h2>
-<pre><code>let facingRight = true;
+<h2>Retournement de Sprite (Direction)</h2>
+<pre><code>let regardeADroite = true;
 
 function draw(ctx) {
   ctx.save();
-  if (facingRight) {
-    ctx.drawImage(sprites.player, player.x, player.y, 32, 32);
+  if (regardeADroite) {
+    ctx.drawImage(sprites.joueur, joueur.x, joueur.y, 32, 32);
   } else {
-    ctx.translate(player.x + 32, player.y);
+    ctx.translate(joueur.x + 32, joueur.y);
     ctx.scale(-1, 1);
-    ctx.drawImage(sprites.player, 0, 0, 32, 32);
+    ctx.drawImage(sprites.joueur, 0, 0, 32, 32);
   }
   ctx.restore();
 }</code></pre>
 `;
 
 const particles = `
-<h1>Particle Effects</h1>
-<p>Particle systems create visual effects like explosions, smoke, rain, and sparks.</p>
+<h1>Effets de Particules</h1>
+<p>Les systèmes de particules créent des effets visuels comme des explosions, de la fumée, de la pluie et des étincelles.</p>
 
-<h2>Simple Particle System</h2>
-<pre><code>let particles = [];
+<h2>Système de Particules Simple</h2>
+<pre><code>let particules = [];
 
-function spawnParticles(x, y, color, count = 20) {
-  for (let i = 0; i < count; i++) {
+function genererParticules(x, y, couleur, nombre = 20) {
+  for (let i = 0; i < nombre; i++) {
     const angle = rand(0, Math.PI * 2);
-    const speed = rand(50, 200);
-    particles.push({
+    const vitesse = rand(50, 200);
+    particules.push({
       x, y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: rand(0.3, 1.0),
-      maxLife: rand(0.3, 1.0),
-      color,
-      size: rand(2, 6)
+      vx: Math.cos(angle) * vitesse,
+      vy: Math.sin(angle) * vitesse,
+      vie: rand(0.3, 1.0),
+      vieMax: rand(0.3, 1.0),
+      couleur,
+      taille: rand(2, 6)
     });
   }
 }
 
 function update(dt) {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
+  for (let i = particules.length - 1; i >= 0; i--) {
+    const p = particules[i];
     p.x += p.vx * dt;
     p.y += p.vy * dt;
     p.vy += 200 * dt;
-    p.life -= dt;
-    if (p.life <= 0) particles.splice(i, 1);
+    p.vie -= dt;
+    if (p.vie <= 0) particules.splice(i, 1);
   }
 }
 
 function draw(ctx) {
-  for (const p of particles) {
-    const alpha = clamp(p.life / p.maxLife, 0, 1);
+  for (const p of particules) {
+    const alpha = clamp(p.vie / p.vieMax, 0, 1);
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+    ctx.fillStyle = p.couleur;
+    ctx.fillRect(p.x - p.taille/2, p.y - p.taille/2, p.taille, p.taille);
   }
   ctx.globalAlpha = 1;
 }</code></pre>
 
-<h2>Explosion Effect</h2>
-<pre><code>function explode(x, y) {
-  spawnParticles(x, y, '#ff6b6b', 30);
-  spawnParticles(x, y, '#ffd700', 20);
-  spawnParticles(x, y, '#ff9a3c', 15);
+<h2>Effet d'Explosion</h2>
+<pre><code>function exploser(x, y) {
+  genererParticules(x, y, '#ff6b6b', 30);
+  genererParticules(x, y, '#ffd700', 20);
+  genererParticules(x, y, '#ff9a3c', 15);
 }</code></pre>
 
-<h2>Rain Effect</h2>
-<pre><code>let rain = [];
+<h2>Effet de Pluie</h2>
+<pre><code>let pluie = [];
 
 function init() {
   for (let i = 0; i < 100; i++) {
-    rain.push({
+    pluie.push({
       x: rand(0, canvas.width),
       y: rand(0, canvas.height),
-      speed: rand(200, 500),
-      length: rand(10, 25)
+      vitesse: rand(200, 500),
+      longueur: rand(10, 25)
     });
   }
 }
 
 function update(dt) {
-  for (const drop of rain) {
-    drop.y += drop.speed * dt;
-    if (drop.y > canvas.height) {
-      drop.y = -drop.length;
-      drop.x = rand(0, canvas.width);
+  for (const goutte of pluie) {
+    goutte.y += goutte.vitesse * dt;
+    if (goutte.y > canvas.height) {
+      goutte.y = -goutte.longueur;
+      goutte.x = rand(0, canvas.width);
     }
   }
 }
@@ -741,30 +860,30 @@ function update(dt) {
 function draw(ctx) {
   ctx.strokeStyle = 'rgba(255,255,255,0.3)';
   ctx.lineWidth = 1;
-  for (const drop of rain) {
+  for (const goutte of pluie) {
     ctx.beginPath();
-    ctx.moveTo(drop.x, drop.y);
-    ctx.lineTo(drop.x - 2, drop.y - drop.length);
+    ctx.moveTo(goutte.x, goutte.y);
+    ctx.lineTo(goutte.x - 2, goutte.y - goutte.longueur);
     ctx.stroke();
   }
 }</code></pre>
 `;
 
 const math = `
-<h1>Math Utilities</h1>
-<p>DraftBox provides <code>rand()</code> and <code>clamp()</code> helpers. Here are more useful math functions for game development.</p>
+<h1>Utilitaires Mathématiques</h1>
+<p>DraftBox fournit les helpers <code>rand()</code> et <code>clamp()</code>. Voici d'autres fonctions mathématiques utiles pour le développement de jeux.</p>
 
-<h2>Built-in Helpers</h2>
-<pre><code>// Random float between min and max
-rand(0, 100);   // e.g., 42.7
-rand(-1, 1);    // e.g., -0.35
+<h2>Fonctions Intégrées</h2>
+<pre><code>// Flottant aléatoire entre min et max
+rand(0, 100);   // ex. : 42.7
+rand(-1, 1);    // ex. : -0.35
 
-// Clamp value between min and max
+// Limiter une valeur entre min et max
 clamp(150, 0, 100); // 100
 clamp(-50, 0, 100); // 0
 clamp(50, 0, 100);  // 50</code></pre>
 
-<h2>Distance & Direction</h2>
+<h2>Distance &amp; Direction</h2>
 <pre><code>function distance(a, b) {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
@@ -775,98 +894,98 @@ function angle(a, b) {
   return Math.atan2(b.y - a.y, b.x - a.x);
 }
 
-function moveTowards(pos, target, speed, dt) {
-  const dx = target.x - pos.x;
-  const dy = target.y - pos.y;
+function seDeplacerVers(pos, cible, vitesse, dt) {
+  const dx = cible.x - pos.x;
+  const dy = cible.y - pos.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
   if (dist < 1) return;
-  pos.x += (dx / dist) * speed * dt;
-  pos.y += (dy / dist) * speed * dt;
+  pos.x += (dx / dist) * vitesse * dt;
+  pos.y += (dy / dist) * vitesse * dt;
 }</code></pre>
 
-<h2>Random Integer</h2>
-<pre><code>function randInt(min, max) {
+<h2>Entier Aléatoire</h2>
+<pre><code>function randEntier(min, max) {
   return Math.floor(rand(min, max + 1));
 }
 
-function randPick(arr) {
+function choisirAleatoire(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }</code></pre>
 
-<h2>Easing Functions</h2>
-<pre><code>function easeIn(t) { return t * t; }
-function easeOut(t) { return t * (2 - t); }
-function easeInOut(t) {
+<h2>Fonctions d'Accélération (Easing)</h2>
+<pre><code>function acceleration(t) { return t * t; }
+function deceleration(t) { return t * (2 - t); }
+function accelerationDeceleration(t) {
   return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 }
 
 let t = 0;
 function update(dt) {
   t = Math.min(1, t + dt * 0.5);
-  player.x = lerp(100, 500, easeOut(t));
+  joueur.x = lerp(100, 500, deceleration(t));
 }</code></pre>
 
-<h2>Screen Shake</h2>
-<pre><code>let shakeIntensity = 0;
+<h2>Secousse d'Écran</h2>
+<pre><code>intensiteSecousse = 0;
 
-function shake(intensity = 5) {
-  shakeIntensity = intensity;
+function secouer(intensite = 5) {
+  intensiteSecousse = intensite;
 }
 
 function draw(ctx) {
   ctx.save();
-  if (shakeIntensity > 0) {
+  if (intensiteSecousse > 0) {
     ctx.translate(
-      rand(-shakeIntensity, shakeIntensity),
-      rand(-shakeIntensity, shakeIntensity)
+      rand(-intensiteSecousse, intensiteSecousse),
+      rand(-intensiteSecousse, intensiteSecousse)
     );
-    shakeIntensity *= 0.9;
-    if (shakeIntensity < 0.5) shakeIntensity = 0;
+    intensiteSecousse *= 0.9;
+    if (intensiteSecousse < 0.5) intensiteSecousse = 0;
   }
   ctx.restore();
 }</code></pre>
 `;
 
 const patterns = `
-<h1>Game Patterns</h1>
-<p>Common game development patterns and examples to use as starting points.</p>
+<h1>Patterns de Jeu</h1>
+<p>Patterns et exemples courants de développement de jeux à utiliser comme point de départ.</p>
 
-<h2>Object Pool</h2>
-<p>Reuse objects instead of creating/destroying them to avoid garbage collection pauses.</p>
-<pre><code>const bullets = [];
-const POOL_SIZE = 50;
-for (let i = 0; i < POOL_SIZE; i++) {
-  bullets.push({ x: 0, y: 0, vx: 0, vy: 0, active: false });
+<h2>Pool d'Objets</h2>
+<p>Réutilisez les objets au lieu de les créer/détruire pour éviter les pauses de ramasse-miettes (garbage collector).</p>
+<pre><code>const balles = [];
+const TAILLE_POOL = 50;
+for (let i = 0; i < TAILLE_POOL; i++) {
+  balles.push({ x: 0, y: 0, vx: 0, vy: 0, actif: false });
 }
 
-function fireBullet(x, y, angle) {
-  for (const b of bullets) {
-    if (!b.active) {
+function tirerBalle(x, y, angle) {
+  for (const b of balles) {
+    if (!b.actif) {
       b.x = x; b.y = y;
       b.vx = Math.cos(angle) * 400;
       b.vy = Math.sin(angle) * 400;
-      b.active = true;
+      b.actif = true;
       break;
     }
   }
 }</code></pre>
 
-<h2>Entity Component (Simple)</h2>
-<pre><code>function createEntity(x, y) {
+<h2>Entité Composant (Simple)</h2>
+<pre><code>function creerEntite(x, y) {
   return {
     x, y, w: 16, h: 16,
     vx: 0, vy: 0,
-    hp: 1,
-    alive: true,
-    type: 'enemy',
+    pdv: 1,
+    vivant: true,
+    type: 'ennemi',
     update(dt) { },
     draw(ctx) { }
   };
 }
 
-const enemies = [];
+const ennemis = [];
 for (let i = 0; i < 10; i++) {
-  const e = createEntity(rand(100, 800), rand(100, 400));
+  const e = creerEntite(rand(100, 800), rand(100, 400));
   e.update = function(dt) {
     this.x += this.vx * dt;
     if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
@@ -875,43 +994,43 @@ for (let i = 0; i < 10; i++) {
     ctx.fillStyle = '#e94560';
     ctx.fillRect(this.x, this.y, this.w, this.h);
   };
-  enemies.push(e);
+  ennemis.push(e);
 }</code></pre>
 
-<h2>Wave Spawning</h2>
-<pre><code>let wave = 1;
-let enemiesInWave = 0;
-let spawnTimer = 0;
+<h2>Apparition par Vagues</h2>
+<pre><code>let vague = 1;
+let ennemisDansVague = 0;
+let timerApparition = 0;
 
 function update(dt) {
-  if (enemiesInWave <= 0 && enemies.length === 0) {
-    startWave(++wave);
+  if (ennemisDansVague <= 0 && ennemis.length === 0) {
+    demarrerVague(++vague);
   }
 
-  spawnTimer -= dt;
-  if (spawnTimer <= 0 && enemiesInWave > 0) {
-    spawnEnemy();
-    enemiesInWave--;
-    spawnTimer = 1.0 / wave;
+  timerApparition -= dt;
+  if (timerApparition <= 0 && ennemisDansVague > 0) {
+    apparaitreEnnemi();
+    ennemisDansVague--;
+    timerApparition = 1.0 / vague;
   }
 }
 
-function startWave(n) {
-  enemiesInWave = n * 5;
-  spawnTimer = 0;
+function demarrerVague(n) {
+  ennemisDansVague = n * 5;
+  timerApparition = 0;
 }</code></pre>
 
-<h2>Camera Follow</h2>
+<h2>Camera qui Suit le Joueur</h2>
 <pre><code>const camera = { x: 0, y: 0 };
-const WORLD_W = 2000;
-const WORLD_H = 2000;
+const LARGEUR_MONDE = 2000;
+const HAUTEUR_MONDE = 2000;
 
 function update(dt) {
-  camera.x = lerp(camera.x, player.x - canvas.width/2, 0.1);
-  camera.y = lerp(camera.y, player.y - canvas.height/2, 0.1);
+  camera.x = lerp(camera.x, joueur.x - canvas.width/2, 0.1);
+  camera.y = lerp(camera.y, joueur.y - canvas.height/2, 0.1);
 
-  camera.x = clamp(camera.x, 0, WORLD_W - canvas.width);
-  camera.y = clamp(camera.y, 0, WORLD_H - canvas.height);
+  camera.x = clamp(camera.x, 0, LARGEUR_MONDE - canvas.width);
+  camera.y = clamp(camera.y, 0, HAUTEUR_MONDE - canvas.height);
 }
 
 function draw(ctx) {
@@ -921,17 +1040,17 @@ function draw(ctx) {
 
   ctx.fillStyle = '#fff';
   ctx.font = '18px monospace';
-  ctx.fillText('HP: ' + player.hp, 16, 32);
+  ctx.fillText('PDV : ' + joueur.pdv, 16, 32);
 }</code></pre>
 
-<h2>Menu System</h2>
-<pre><code>const menuItems = ['Start Game', 'Options', 'Credits'];
-let selectedIndex = 0;
+<h2>Système de Menu</h2>
+<pre><code>const elementsMenu = ['Jouer', 'Options', 'Crédits'];
+let indexSelection = 0;
 
 function update(dt) {
-  if (keys.ArrowUp) { selectedIndex = Math.max(0, selectedIndex - 1); keys.ArrowUp = false; }
-  if (keys.ArrowDown) { selectedIndex = Math.min(menuItems.length - 1, selectedIndex + 1); keys.ArrowDown = false; }
-  if (keys.Enter) { selectItem(selectedIndex); }
+  if (keys.ArrowUp) { indexSelection = Math.max(0, indexSelection - 1); keys.ArrowUp = false; }
+  if (keys.ArrowDown) { indexSelection = Math.min(elementsMenu.length - 1, indexSelection + 1); keys.ArrowDown = false; }
+  if (keys.Enter) { selectionnerElement(indexSelection); }
 }
 
 function draw(ctx) {
@@ -941,102 +1060,101 @@ function draw(ctx) {
   ctx.fillStyle = '#e94560';
   ctx.font = 'bold 36px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('MY GAME', canvas.width/2, 100);
+  ctx.fillText('MON JEU', canvas.width/2, 100);
 
   ctx.font = '22px monospace';
-  menuItems.forEach((item, i) => {
-    ctx.fillStyle = i === selectedIndex ? '#ffd700' : '#8892b0';
-    ctx.fillText((i === selectedIndex ? '> ' : '  ') + item, canvas.width/2, 200 + i * 40);
+  elementsMenu.forEach((item, i) => {
+    ctx.fillStyle = i === indexSelection ? '#ffd700' : '#8892b0';
+    ctx.fillText((i === indexSelection ? '> ' : '  ') + item, canvas.width/2, 200 + i * 40);
   });
   ctx.textAlign = 'left';
 }</code></pre>
 `;
 
 const apiRef = `
-<h1>DraftBox API Reference</h1>
-<p>Complete reference for all APIs available in your game code.</p>
+<h1>Référence API DraftBox</h1>
+<p>Référence complète de toutes les API disponibles dans votre code de jeu.</p>
 
-<h2>Game Lifecycle</h2>
+<h2>Cycle de Vie du Jeu</h2>
 <table>
-  <tr><th>Function</th><th>Description</th></tr>
-  <tr><td><code>init()</code></td><td>Called once when the game starts.</td></tr>
-  <tr><td><code>update(dt)</code></td><td>Called every frame. <code>dt</code> = delta time in seconds (capped at 0.05).</td></tr>
-  <tr><td><code>draw(ctx)</code></td><td>Called every frame after <code>update()</code>. Receives the Canvas 2D context.</td></tr>
+  <tr><th>Fonction</th><th>Description</th></tr>
+  <tr><td><code>init()</code></td><td>Appelée une fois au démarrage du jeu.</td></tr>
+  <tr><td><code>update(dt)</code></td><td>Appelée à chaque image. <code>dt</code> = temps écoulé en secondes (limité à 0.05).</td></tr>
+  <tr><td><code>draw(ctx)</code></td><td>Appelée à chaque image après <code>update()</code>. Reçoit le contexte Canvas 2D.</td></tr>
 </table>
 
-<h2>Input</h2>
+<h2>Entrées</h2>
 <table>
-  <tr><th>Property</th><th>Description</th></tr>
-  <tr><td><code>keys</code></td><td>Object with boolean values for each key code. e.g., <code>keys.Space</code>, <code>keys.ArrowLeft</code>, <code>keys.KeyW</code></td></tr>
-  <tr><td><code>mouse.x</code></td><td>Mouse X position in canvas coordinates.</td></tr>
-  <tr><td><code>mouse.y</code></td><td>Mouse Y position in canvas coordinates.</td></tr>
-  <tr><td><code>mouse.left</code></td><td>Boolean — is the left mouse button pressed?</td></tr>
+  <tr><th>Propriété</th><th>Description</th></tr>
+  <tr><td><code>keys</code></td><td>Objet avec des booléens pour chaque code de touche. Ex. : <code>keys.Space</code>, <code>keys.ArrowLeft</code>, <code>keys.KeyW</code></td></tr>
+  <tr><td><code>mouse.x</code></td><td>Position X de la souris en coordonnées canvas.</td></tr>
+  <tr><td><code>mouse.y</code></td><td>Position Y de la souris en coordonnées canvas.</td></tr>
+  <tr><td><code>mouse.left</code></td><td>Booléen — le bouton gauche de la souris est-il enfoncé ?</td></tr>
 </table>
 
-<h2>Graphics</h2>
+<h2>Graphismes</h2>
 <table>
-  <tr><th>Property</th><th>Description</th></tr>
-  <tr><td><code>canvas</code></td><td>The game <code>&lt;canvas&gt;</code> element (960×540). Use <code>canvas.width</code>, <code>canvas.height</code> for dimensions.</td></tr>
-  <tr><td><code>sprites[name]</code></td><td>A canvas element for each sprite saved in the Pixel Editor. Use with <code>ctx.drawImage(sprites.name, x, y)</code>.</td></tr>
+  <tr><th>Propriété</th><th>Description</th></tr>
+  <tr><td><code>canvas</code></td><td>L'élément <code>&lt;canvas&gt;</code> du jeu (960×540). Utilisez <code>canvas.width</code>, <code>canvas.height</code> pour les dimensions.</td></tr>
+  <tr><td><code>sprites[nom]</code></td><td>Un élément canvas pour chaque sprite sauvegardé dans l'éditeur. Utilisez avec <code>ctx.drawImage(sprites.nom, x, y)</code>.</td></tr>
 </table>
 
-<h2>Utilities</h2>
+<h2>Utilitaires</h2>
 <table>
-  <tr><th>Function</th><th>Description</th></tr>
-  <tr><td><code>rand(min, max)</code></td><td>Returns a random float between min and max (inclusive).</td></tr>
-  <tr><td><code>clamp(value, min, max)</code></td><td>Clamps value to the range [min, max].</td></tr>
-  <tr><td><code>rectCollide(a, b)</code></td><td>AABB collision test. Both objects need <code>{x, y, w, h}</code>. Returns boolean.</td></tr>
-  <tr><td><code>audio(name)</code></td><td>Plays an audio file by name/path.</td></tr>
+  <tr><th>Fonction</th><th>Description</th></tr>
+  <tr><td><code>rand(min, max)</code></td><td>Retourne un flottant aléatoire entre min et max (inclus).</td></tr>
+  <tr><td><code>clamp(valeur, min, max)</code></td><td>Limite la valeur à l'intervalle [min, max].</td></tr>
+  <tr><td><code>rectCollide(a, b)</code></td><td>Test de collision AABB. Les deux objets doivent avoir <code>{x, y, w, h}</code>. Retourne un booléen.</td></tr>
+  <tr><td><code>audio(nom)</code></td><td>Joue un fichier audio par nom/chemin.</td></tr>
 </table>
 
-<h2>Canvas 2D Context (ctx)</h2>
-<p>The <code>ctx</code> parameter in <code>draw(ctx)</code> is a standard <a href="https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D" target="_blank">CanvasRenderingContext2D</a>. Key methods:</p>
+<h2>Contexte Canvas 2D (ctx)</h2>
+<p>Le paramètre <code>ctx</code> dans <code>draw(ctx)</code> est un <a href="https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D" target="_blank">CanvasRenderingContext2D</a> standard. Méthodes clés :</p>
 
 <table>
-  <tr><th>Method</th><th>Description</th></tr>
-  <tr><td><code>fillStyle</code></td><td>Set fill color (string: 'red', '#e94560', 'rgba(...)')</td></tr>
-  <tr><td><code>fillRect(x, y, w, h)</code></td><td>Draw filled rectangle</td></tr>
-  <tr><td><code>strokeRect(x, y, w, h)</code></td><td>Draw outlined rectangle</td></tr>
-  <tr><td><code>fillText(text, x, y)</code></td><td>Draw filled text</td></tr>
-  <tr><td><code>drawImage(img, x, y, w, h)</code></td><td>Draw image/sprite</td></tr>
-  <tr><td><code>beginPath()</code></td><td>Start a new path for custom shapes</td></tr>
-  <tr><td><code>arc(x, y, r, startAngle, endAngle)</code></td><td>Add an arc/circle to the path</td></tr>
-  <tr><td><code>moveTo(x, y)</code></td><td>Move the path cursor</td></tr>
-  <tr><td><code>lineTo(x, y)</code></td><td>Draw a line to (x, y)</td></tr>
-  <tr><td><code>stroke()</code></td><td>Stroke the current path</td></tr>
-  <tr><td><code>fill()</code></td><td>Fill the current path</td></tr>
-  <tr><td><code>save() / restore()</code></td><td>Save/restore transform and style state</td></tr>
-  <tr><td><code>translate(x, y)</code></td><td>Move the origin</td></tr>
-  <tr><td><code>rotate(angle)</code></td><td>Rotate (in radians)</td></tr>
-  <tr><td><code>scale(x, y)</code></td><td>Scale the canvas</td></tr>
-  <tr><td><code>globalAlpha</code></td><td>Set transparency (0.0 to 1.0)</td></tr>
-  <tr><td><code>font</code></td><td>Set font style (<code>'20px monospace'</code>, <code>'bold 24px Arial'</code>)</td></tr>
-  <tr><td><code>textAlign</code></td><td>Text alignment: 'left', 'center', 'right'</td></tr>
+  <tr><th>Méthode</th><th>Description</th></tr>
+  <tr><td><code>fillStyle</code></td><td>Définir la couleur de remplissage (chaîne : 'red', '#e94560', 'rgba(...)')</td></tr>
+  <tr><td><code>fillRect(x, y, w, h)</code></td><td>Dessiner un rectangle rempli</td></tr>
+  <tr><td><code>strokeRect(x, y, w, h)</code></td><td>Dessiner un rectangle contour</td></tr>
+  <tr><td><code>fillText(texte, x, y)</code></td><td>Dessiner du texte rempli</td></tr>
+  <tr><td><code>drawImage(img, x, y, w, h)</code></td><td>Dessiner une image/sprite</td></tr>
+  <tr><td><code>beginPath()</code></td><td>Commencer un nouveau chemin pour des formes personnalisées</td></tr>
+  <tr><td><code>arc(x, y, r, angleDebut, angleFin)</code></td><td>Ajouter un arc/cercle au chemin</td></tr>
+  <tr><td><code>moveTo(x, y)</code></td><td>Déplacer le curseur du chemin</td></tr>
+  <tr><td><code>lineTo(x, y)</code></td><td>Dessiner une ligne vers (x, y)</td></tr>
+  <tr><td><code>stroke()</code></td><td>Tracer le chemin actuel</td></tr>
+  <tr><td><code>fill()</code></td><td>Remplir le chemin actuel</td></tr>
+  <tr><td><code>save() / restore()</code></td><td>Sauvegarder/restaurer l'état des transformations et styles</td></tr>
+  <tr><td><code>translate(x, y)</code></td><td>Déplacer l'origine</td></tr>
+  <tr><td><code>rotate(angle)</code></td><td>Rotation (en radians)</td></tr>
+  <tr><td><code>scale(x, y)</code></td><td>Échelle du canvas</td></tr>
+  <tr><td><code>globalAlpha</code></td><td>Définir la transparence (0.0 à 1.0)</td></tr>
+  <tr><td><code>font</code></td><td>Définir le style de police (<code>'20px monospace'</code>, <code>'bold 24px Arial'</code>)</td></tr>
+  <tr><td><code>textAlign</code></td><td>Alignement du texte : 'left', 'center', 'right'</td></tr>
 </table>
 
-<h2>Canvas Size</h2>
-<p>The game canvas is <strong>960 × 540</strong> pixels (16:9 aspect ratio). Always use <code>canvas.width</code> and <code>canvas.height</code> for responsive code.</p>
+<h2>Taille du Canvas</h2>
+<p>Le canvas de jeu fait <strong>960 × 540</strong> pixels (ratio 16:9). Utilisez toujours <code>canvas.width</code> et <code>canvas.height</code> pour un code adaptable.</p>
 
 <pre><code>const cx = canvas.width / 2;
 const cy = canvas.height / 2;</code></pre>
 
 <div class="note">
-  <strong>All standard JavaScript is available.</strong> You can use arrays, objects, math functions, loops, conditionals, etc. The game runs in the main page context.
-</div>
+  <strong>Tout le JavaScript standard est disponible.</strong> Vous pouvez utiliser des tableaux, des objets, des fonctions mathématiques, des boucles, des conditionnels, etc. Le jeu s'exécute dans le contexte de la page principale.</div>
 `;
 
 const demos = `
 <div style="text-align:center;padding:20px 0;background:linear-gradient(135deg,#1a3a2e,#2d5a47);border-radius:16px;margin-bottom:24px;border:2px solid var(--accent);">
   <span style="font-size:48px;display:block;margin-bottom:8px;">🎮</span>
-  <h1 style="margin-bottom:8px;">Retro Game Demos</h1>
-  <p style="font-size:15px;max-width:500px;margin:0 auto;">Charger un jeu retro, le code apparaît dans l'éditeur et le jeu se lance tout seul. Prêt à jouer ?</p>
+  <h1 style="margin-bottom:8px;">Démos de Jeux Rétro</h1>
+  <p style="font-size:15px;max-width:500px;margin:0 auto;">Chargez un jeu rétro, le code apparaît dans l'éditeur et le jeu se lance tout seul. Prêt à jouer ?</p>
 </div>
 
 <div class="demo-grid">
 ${Demos.map((demo, i) => `
 <div class="demo-card">
   <div class="demo-card-content">
-    <div class="demo-card-emoji">${['🕹️','🐍','👾','🧱','☄️','🏃'][i % 6]}</div>
+    <div class="demo-card-emoji">${['🕹️','🐍','👾','🧱','☄️','🏃','🎲','🎯'][i % 8]}</div>
     <h3>${demo.name}</h3>
     <p>${demo.desc}</p>
     <button class="demo-play-btn" data-demo="${i}">▶ Jouer à ${demo.name}</button>
@@ -1047,20 +1165,22 @@ ${Demos.map((demo, i) => `
 `;
 
 export const sections = [
-  { id: 'getting-started', title: 'Getting Started', content: gettingStarted },
-  { id: 'game-loop', title: 'Game Loop', content: gameLoop },
-  { id: 'canvas-basics', title: 'Canvas 2D Basics', content: canvasBasics },
+  { id: 'getting-started', title: 'Bienvenue', content: gettingStarted },
+  { id: 'download', title: '📲 Télécharger l\'App', content: download },
+  { id: 'game-loop', title: 'Boucle de Jeu', content: gameLoop },
+  { id: 'canvas-basics', title: 'Canvas 2D — Les Bases', content: canvasBasics },
+  { id: 'canvas-3d', title: 'Canvas 3D — Les Bases', content: canvas3DBasics },
   { id: 'sprites', title: 'Sprites & Images', content: sprites },
-  { id: 'input', title: 'Input Handling', content: input },
-  { id: 'collision', title: 'Collision Detection', content: collision },
-  { id: 'physics', title: 'Simple Physics', content: physics },
-  { id: 'audio', title: 'Audio & Sound', content: audio },
-  { id: 'game-state', title: 'Game State', content: gameState },
+  { id: 'input', title: 'Gestion des Entrées', content: input },
+  { id: 'collision', title: 'Détection de Collisions', content: collision },
+  { id: 'physics', title: 'Physique Simple', content: physics },
+  { id: 'audio', title: 'Audio & Son', content: audio },
+  { id: 'game-state', title: 'État du Jeu', content: gameState },
   { id: 'tilemaps', title: 'Tilemaps', content: tilemaps },
   { id: 'animation', title: 'Animation', content: animation },
-  { id: 'particles', title: 'Particles', content: particles },
-  { id: 'math', title: 'Math Utilities', content: math },
-  { id: 'patterns', title: 'Game Patterns', content: patterns },
-  { id: 'api-ref', title: 'DraftBox API Reference', content: apiRef },
-  { id: 'demos', title: '🎮 Retro Game Demos', content: demos },
+  { id: 'particles', title: 'Particules', content: particles },
+  { id: 'math', title: 'Utilitaires Mathématiques', content: math },
+  { id: 'patterns', title: 'Patterns de Jeu', content: patterns },
+  { id: 'api-ref', title: 'Référence API', content: apiRef },
+  { id: 'demos', title: '🎮 Démos de Jeux Rétro', content: demos },
 ];

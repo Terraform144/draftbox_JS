@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = 8080;
+const PORT = 3002;
 const SOURCES_DIR = path.join(__dirname, 'sources');
 
 if (!fs.existsSync(SOURCES_DIR)) {
@@ -11,6 +11,7 @@ if (!fs.existsSync(SOURCES_DIR)) {
 }
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'dist')));
 app.use(express.static(__dirname));
 
 app.get('/api/sources', (req, res) => {
@@ -64,6 +65,70 @@ app.delete('/api/sources/:name', (req, res) => {
   try {
     const filename = req.params.name.replace(/\.\./g, '').replace(/[\/\\]/g, '');
     const filepath = path.join(SOURCES_DIR, filename + '.js');
+    if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const PROJECTS_DIR = path.join(__dirname, 'projects');
+
+if (!fs.existsSync(PROJECTS_DIR)) {
+  fs.mkdirSync(PROJECTS_DIR, { recursive: true });
+}
+
+app.get('/api/projects', (req, res) => {
+  try {
+    const files = fs.readdirSync(PROJECTS_DIR).filter(f => f.endsWith('.json'));
+    const projects = files.map(f => {
+      const fullPath = path.join(PROJECTS_DIR, f);
+      const stats = fs.statSync(fullPath);
+      return {
+        name: f.replace('.json', ''),
+        filename: f,
+        size: stats.size,
+        mtime: stats.mtime
+      };
+    });
+    projects.sort((a, b) => new Date(b.mtime) - new Date(a.mtime));
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/projects', (req, res) => {
+  try {
+    const { name, code, sprites } = req.body;
+    if (!name) return res.status(400).json({ error: 'name is required' });
+    const safeName = name.replace(/\.\./g, '').replace(/[\/\\]/g, '').replace(/[^a-zA-Z0-9_\-]/g, '_');
+    const filepath = path.join(PROJECTS_DIR, safeName + '.json');
+    fs.writeFileSync(filepath, JSON.stringify({ name: safeName, code, sprites }, null, 2), 'utf-8');
+    res.json({ name: safeName, filename: safeName + '.json' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/projects/:name', (req, res) => {
+  try {
+    const filename = req.params.name.replace(/\.\./g, '').replace(/[\/\\]/g, '');
+    const filepath = path.join(PROJECTS_DIR, filename + '.json');
+    if (!fs.existsSync(filepath)) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    const data = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/projects/:name', (req, res) => {
+  try {
+    const filename = req.params.name.replace(/\.\./g, '').replace(/[\/\\]/g, '');
+    const filepath = path.join(PROJECTS_DIR, filename + '.json');
     if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
     res.json({ ok: true });
   } catch (err) {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 import PixelEditor from './components/PixelEditor';
 import { defaultCode } from './lib/default-code';
@@ -14,6 +14,8 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState('editor');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [code, setCode] = useState(defaultCode);
+  const codeRef = useRef(code);
+  codeRef.current = code;
 
   useEffect(() => {
     pixelEditor.init(document.getElementById('pixelCanvas'));
@@ -21,8 +23,14 @@ export default function App() {
       onLog() {}
     });
     window.__setCode = setCode;
+    window.__getCode = () => codeRef.current;
+    window.__getSprites = () => pixelEditor.getAllSprites();
+    window.__pixelEditor = pixelEditor;
     return () => {
       delete window.__setCode;
+      delete window.__getCode;
+      delete window.__getSprites;
+      delete window.__pixelEditor;
       pixelEditor.destroy();
     };
   }, []);
@@ -82,7 +90,7 @@ export default function App() {
 
   return (
     <div id="app" className={sidebarOpen ? 'sidebar-open' : ''}>
-      <Sidebar currentTab={currentTab} onSwitchTab={handleSwitchTab} onRun={handleRun} onStop={handleStop} />
+      <Sidebar currentTab={currentTab} onSwitchTab={handleSwitchTab} />
       <div id="sidebarOverlay" className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       <button id="sidebarToggle" className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>☰</button>
       <main id="main-content">

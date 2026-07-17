@@ -114,6 +114,7 @@ const sceneRunner = {
     const runner = this;
 
     const api = {
+      createjs: window.createjs,
       keys: this.keys,
       mouse: this.mouse,
       sprites: spriteCanvases,

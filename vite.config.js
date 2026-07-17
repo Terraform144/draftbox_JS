@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'fs';
 import path from 'path';
 
@@ -106,6 +107,54 @@ function apiMiddleware(req, res, next) {
 export default defineConfig({
   plugins: [
     react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.png', 'icon-192.png', 'icon-512.png'],
+      manifest: {
+        name: 'DraftBox',
+        short_name: 'DraftBox',
+        description: 'DraftBox - Browser Game Creator',
+        theme_color: '#1a1a2e',
+        background_color: '#1a1a2e',
+        display: 'standalone',
+        orientation: 'any',
+        start_url: '/',
+        icons: [
+          {
+            src: 'icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,png,json}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https?:\/\/.*\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24
+              }
+            }
+          }
+        ]
+      }
+    }),
     {
       name: 'api-routes',
       configureServer(server) {
@@ -114,8 +163,9 @@ export default defineConfig({
     }
   ],
   server: {
-    host: '212.227.93.180',
-    port: 5173
+    host: '0.0.0.0',
+    port: 5173,
+    allowedHosts: ['212.227.93.180.nip.io']
   },
   build: {
     outDir: 'dist',

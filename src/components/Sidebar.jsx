@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Sidebar({ currentTab, onSwitchTab, onRun, onStop }) {
+export default function Sidebar({ currentTab, onSwitchTab }) {
   return (
     <nav id="sidebar">
       <div className="sidebar-header">
@@ -25,10 +25,7 @@ export default function Sidebar({ currentTab, onSwitchTab, onRun, onStop }) {
           <span className="tab-label">Docs</span>
         </button>
       </div>
-      <div className="sidebar-footer">
-        <button id="runBtn" className="btn-run" onClick={onRun}>▶ Run</button>
-        <button id="stopBtn" className="btn-stop" onClick={onStop}>■ Stop</button>
-      </div>
+
     </nav>
   );
 }
