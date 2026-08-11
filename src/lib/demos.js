@@ -1364,6 +1364,11 @@ function construireSaisiesHTML() {
     const opt = document.createElement('option');
     opt.value = String(i);
     opt.textContent = m.nom;
+    // Le <select> hérite ce style à l'état fermé, mais la liste déroulante
+    // (rendue par le navigateur/l'OS) ignore souvent le fond translucide du
+    // parent — sans ceci elle retombe sur un fond blanc, avec un texte
+    // blanc devenu illisible.
+    opt.style.cssText = 'background:#16213e;color:#fff;';
     selecteur.appendChild(opt);
   });
 
