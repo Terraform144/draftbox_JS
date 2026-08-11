@@ -1,98 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import sceneRunner from '../lib/scene-runner';
 
-const SHAPES = ['Carré', 'Triangle', 'Hexagone', 'Étoile', 'Fleur', 'Spirale'];
-
-function TurtlePanel({ report }) {
-  const [shape, setShape] = useState(SHAPES[0]);
-  const [distance, setDistance] = useState(60);
-  const [goX, setGoX] = useState(0);
-  const [goY, setGoY] = useState(0);
-
-  const runShape = useCallback(() => {
-    sceneRunner.sendCommand({ type: 'shape', name: shape });
-  }, [shape]);
-
-  const runTrace = useCallback(() => {
-    sceneRunner.sendCommand({ type: 'avance', value: Number(distance) || 0 });
-  }, [distance]);
-
-  const runGoto = useCallback(() => {
-    sceneRunner.sendCommand({ type: 'aller', x: Number(goX) || 0, y: Number(goY) || 0 });
-  }, [goX, goY]);
-
-  const runPenUp = useCallback(() => sceneRunner.sendCommand({ type: 'penup' }), []);
-  const runPenDown = useCallback(() => sceneRunner.sendCommand({ type: 'pendown' }), []);
-  const runClear = useCallback(() => sceneRunner.sendCommand({ type: 'clear' }), []);
-
-  const live = !!report;
-  const isAuto = live ? report.auto !== false : true;
-  const toggleAuto = useCallback(() => {
-    sceneRunner.sendCommand({ type: isAuto ? 'pause' : 'resume' });
-  }, [isAuto]);
-
-  return (
-    <div className="turtle-panel">
-      <div className="turtle-panel-group">
-        <span className="turtle-panel-icon" aria-hidden="true">🐢</span>
-        <select className="turtle-select" value={shape} onChange={(e) => setShape(e.target.value)} aria-label="Forme">
-          {SHAPES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <button className="turtle-btn turtle-btn-primary" onClick={runShape}>▶ Exécuter</button>
-        <button
-          className={'turtle-btn turtle-icon-btn' + (isAuto ? ' turtle-btn-active' : '')}
-          onClick={toggleAuto}
-          title={isAuto ? 'Mettre le dessin automatique en pause' : 'Reprendre le dessin automatique'}
-        >
-          {isAuto ? '⏸' : '▶'}
-        </button>
-      </div>
-
-      <div className="turtle-panel-divider" />
-
-      <div className="turtle-panel-group">
-        <label className="turtle-field">
-          Tracer
-          <input type="number" value={distance} onChange={(e) => setDistance(e.target.value)} />
-        </label>
-        <button className="turtle-btn" onClick={runTrace}>Tracer</button>
-      </div>
-
-      <div className="turtle-panel-divider" />
-
-      <div className="turtle-panel-group">
-        <button className="turtle-btn" onClick={runPenUp} title="Lever le crayon">✎↑ Lever</button>
-        <button className="turtle-btn" onClick={runPenDown} title="Abaisser le crayon">✎↓ Abaisser</button>
-      </div>
-
-      <div className="turtle-panel-divider" />
-
-      <div className="turtle-panel-group">
-        <label className="turtle-field turtle-field-goto">
-          Aller à
-          <input type="number" value={goX} onChange={(e) => setGoX(e.target.value)} aria-label="Coordonnée X cible" />
-          <span className="turtle-field-sep">,</span>
-          <input type="number" value={goY} onChange={(e) => setGoY(e.target.value)} aria-label="Coordonnée Y cible" />
-        </label>
-        <button className="turtle-btn" onClick={runGoto}>Aller à</button>
-      </div>
-
-      <div className="turtle-panel-divider" />
-
-      <button className="turtle-btn turtle-btn-danger" onClick={runClear} title="Effacer le dessin">🧹 Effacer</button>
-
-      <div className="turtle-panel-divider" />
-
-      <div className="turtle-coords">
-        <span className={'turtle-coords-dot' + (live ? ' live' : '')} aria-hidden="true" />
-        <span className="turtle-coords-item"><b>X</b>{live ? report.x : '—'}</span>
-        <span className="turtle-coords-item"><b>Y</b>{live ? report.y : '—'}</span>
-        <span className="turtle-coords-item"><b>CAP</b>{live ? report.cap + '°' : '—'}</span>
-      </div>
-    </div>
-  );
-}
-
 function ConsoleOutput({ logs }) {
   const consoleRef = useRef(null);
   useEffect(() => {
@@ -114,7 +22,6 @@ export default function Scene({ show, onRun }) {
   const wrapperRef = useRef(null);
   const [logs, setLogs] = useState([]);
   const [touchState, setTouchState] = useState({});
-  const [turtleReport, setTurtleReport] = useState(null);
   // CSS-only "fake" fullscreen (position:fixed overlay) instead of the
   // native Fullscreen API: the app is commonly embedded in an <iframe>
   // (e.g. gamecreator.debrouillard.be) that isn't granted the "fullscreen"
@@ -133,8 +40,6 @@ export default function Scene({ show, onRun }) {
         setLogs([]);
       }
     });
-    sceneRunner.onReport = (data) => setTurtleReport(data);
-    return () => { sceneRunner.onReport = null; };
   }, []);
 
   useEffect(() => {
@@ -169,7 +74,6 @@ export default function Scene({ show, onRun }) {
 
   const handleReset = useCallback(() => {
     setLogs([]);
-    setTurtleReport(null);
     sceneRunner.reset();
   }, []);
 
@@ -238,7 +142,6 @@ export default function Scene({ show, onRun }) {
                 </svg>
               )}
             </button>
-            <TurtlePanel report={turtleReport} />
           </div>
           <div className="scene-output">
             <h3>Console</h3>

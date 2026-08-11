@@ -311,11 +311,41 @@ tokenize('REPETE 4 [ AV 100 TD 90 ]');
   return m.fait >= m.total; // vrai quand le mouvement est terminé
 }</code></pre>
 
+<h2>Un panneau de commande dessiné avec CreateJS</h2>
+<p>Plutôt qu'une interface HTML par-dessus le canvas, la démo dessine son propre panneau de commande directement dedans, avec <a href="https://createjs.com/" target="_blank">CreateJS</a> (déjà disponible dans DraftBox via la variable <code>createjs</code>). Chaque bouton est un <code>Container</code> CreateJS avec une forme et un texte, et un simple <code>.on('click', …)</code> :</p>
+<pre><code>function creerBouton(parent, label, x, y, largeurMin, onClick) {
+  const txt = new createjs.Text(label, 'bold 12px monospace', '#ffffff');
+  txt.textAlign = 'center'; txt.textBaseline = 'middle';
+  const largeur = Math.max(largeurMin, txt.getMeasuredWidth() + 20);
+
+  const fond = new createjs.Shape();
+  fond.graphics.beginFill('rgba(255,255,255,0.12)').drawRoundRect(0, 0, largeur, 26, 6);
+  txt.x = largeur / 2; txt.y = 13;
+
+  const cont = new createjs.Container();
+  cont.addChild(fond, txt);
+  cont.x = x; cont.y = y;
+  cont.cursor = 'pointer';
+  cont.on('click', onClick);
+  parent.addChild(cont);
+  return { cont, largeur };
+}</code></pre>
+<p>Le <code>Stage</code> CreateJS partage le même <code>&lt;canvas&gt;</code> que le dessin de la tortue (fait au pinceau avec <code>ctx</code> classique). Le point clé : <code>stage.autoClear = false</code>, sinon CreateJS effacerait le dessin de la tortue avant de poser ses boutons par-dessus.</p>
+<pre><code>function draw(ctx) {
+  ctx.fillRect(0, 0, canvas.width, canvas.height); // efface
+  // ... dessine la grille, l'encre, la tortue ...
+  stage.update(); // pose le panneau CreateJS par-dessus, sans re-effacer</code></pre>
+
 <h2>Essayer la démo</h2>
-<p>La démo enchaîne toute seule six figures classiques — carré, triangle, hexagone, étoile, fleur et spirale — en dessinant chacune trait par trait. Une fois lancée dans la <strong>Scène</strong> :</p>
+<p>La démo enchaîne toute seule six figures classiques — carré, triangle, hexagone, étoile, fleur et spirale. Une fois lancée dans la <strong>Scène</strong>, tout se pilote depuis le panneau en bas du canvas :</p>
 <ul>
-  <li><strong>1 à 6</strong> — sauter directement à un motif</li>
-  <li><strong>ESPACE</strong> — rejouer le motif actuel depuis le début</li>
+  <li><strong>Carré / Triangle / Hexagone / Étoile / Fleur / Spirale</strong> — lance directement ce motif</li>
+  <li><strong>Avancer</strong> — fait avancer la tortue d'un cran (met le dessin automatique en pause)</li>
+  <li><strong>Crayon</strong> — lève ou baisse le crayon</li>
+  <li><strong>Effacer</strong> — efface le dessin et recentre la tortue</li>
+  <li><strong>⏸ / ▶</strong> — met en pause ou relance le motif en cours</li>
+  <li><strong>Clic sur le dessin</strong> — envoie la tortue à cet endroit précis (l'équivalent d'un « Aller à » à la souris)</li>
+  <li><strong>1 à 6 / ESPACE</strong> — les mêmes raccourcis clavier restent disponibles</li>
 </ul>
 
 <div style="text-align:center;margin:24px 0;">

@@ -1018,9 +1018,10 @@ function draw(ctx) {
 
   {
     name: 'Tortue Logo',
-    desc: 'Mini-interpréteur du langage Logo (1967) : la tortue enchaîne carré, triangle, hexagone, étoile, fleur et spirale toute seule. Touches 1-6 pour choisir un motif, ESPACE pour le rejouer.',
+    desc: 'Mini-interpréteur du langage Logo (1967), avec un panneau de commande CreateJS dessiné directement sur le canvas : choisis une forme, avance, lève/baisse le crayon, efface, ou clique sur le dessin pour y envoyer la tortue.',
     code: `// TORTUE LOGO — mini-interpréteur inspiré du langage Logo (1967)
-// Anime une tortue qui dessine des figures géométriques à partir de commandes textuelles.
+// Panneau de commande dessiné avec CreateJS, directement sur le canvas de la scène
+// (aucune interface HTML — tout est ici, dans le code de la démo).
 
 const ALIASES = {
   AVANCE: 'fwd', AV: 'fwd', FORWARD: 'fwd', FD: 'fwd',
@@ -1106,11 +1107,13 @@ const MOTIFS = [
 const VITESSE_AV = 260;
 const VITESSE_ROT = 260;
 const PAUSE_FIN = 1.6;
+const HUD_TOP = 484; // le panneau CreateJS occupe la bande du bas, sous cette ligne
 
 let encre, encreCtx;
 let tortue;
 let file, fi, mouvement, motifActuel, termine, minuteur;
 let fileManuelle = [], mouvementManuel = null, modeAuto = true;
+let stage, texteLabelCrayon, texteLabelPause, texteCoords;
 
 function creerCommande(cmd) {
   if (cmd.type === 'fwd' || cmd.type === 'bwd') {
@@ -1183,48 +1186,119 @@ function chargerMotif(index) {
   tortue = { x: 0, y: 0, cap: 0, crayonBaisse: true, couleur: m.couleur, epaisseur: 3, visible: true };
 }
 
+// ── Panneau de commande CreateJS ──────────────────────────────────────────
+
+function creerBouton(parent, label, x, y, largeurMin, onClick) {
+  const pad = 10, hauteur = 26;
+  const txt = new createjs.Text(label, 'bold 12px monospace', '#ffffff');
+  txt.textAlign = 'center';
+  txt.textBaseline = 'middle';
+  const largeur = Math.max(largeurMin || 0, txt.getMeasuredWidth() + pad * 2);
+  const fond = new createjs.Shape();
+  fond.graphics.beginFill('rgba(255,255,255,0.12)').drawRoundRect(0, 0, largeur, hauteur, 6);
+  txt.x = largeur / 2;
+  txt.y = hauteur / 2;
+  const cont = new createjs.Container();
+  cont.addChild(fond, txt);
+  cont.x = x; cont.y = y;
+  cont.cursor = 'pointer';
+  cont.on('click', onClick);
+  parent.addChild(cont);
+  return { cont, fond, txt, largeur, hauteur };
+}
+
+function construirePanneau() {
+  const panneau = new createjs.Container();
+  panneau.x = 0; panneau.y = HUD_TOP;
+
+  const fond = new createjs.Shape();
+  fond.graphics.beginFill('rgba(10,10,20,0.82)').drawRect(0, 0, canvas.width, canvas.height - HUD_TOP);
+  panneau.addChild(fond);
+
+  let x = 10;
+  const y1 = 8;
+
+  MOTIFS.forEach((m, i) => {
+    const b = creerBouton(panneau, m.nom, x, y1, 0, () => chargerMotif(i));
+    x += b.largeur + 6;
+  });
+
+  x += 8;
+  let b = creerBouton(panneau, 'Avancer', x, y1, 0, () => {
+    modeAuto = false;
+    fileManuelle.push({ type: 'fwd', value: 60 });
+  });
+  x += b.largeur + 8;
+
+  const boutonCrayon = creerBouton(panneau, '', x, y1, 96, () => {
+    tortue.crayonBaisse = !tortue.crayonBaisse;
+  });
+  texteLabelCrayon = boutonCrayon.txt;
+  x += boutonCrayon.largeur + 8;
+
+  b = creerBouton(panneau, 'Effacer', x, y1, 0, () => {
+    encreCtx.clearRect(0, 0, encre.width, encre.height);
+    tortue.x = 0; tortue.y = 0; tortue.cap = 0;
+    fileManuelle = []; mouvementManuel = null;
+    modeAuto = false;
+  });
+  x += b.largeur + 8;
+
+  const boutonPause = creerBouton(panneau, '', x, y1, 34, () => {
+    modeAuto = !modeAuto;
+  });
+  texteLabelPause = boutonPause.txt;
+
+  const legende = new createjs.Text('Clique sur le dessin pour y envoyer la tortue', '10px monospace', 'rgba(255,255,255,0.5)');
+  legende.x = 10; legende.y = y1 + 26 + 10;
+  panneau.addChild(legende);
+
+  texteCoords = new createjs.Text('', '12px monospace', '#cfd8dc');
+  texteCoords.textAlign = 'right';
+  texteCoords.textBaseline = 'middle';
+  texteCoords.x = canvas.width - 10;
+  texteCoords.y = y1 + 13;
+  panneau.addChild(texteCoords);
+
+  stage.addChild(panneau);
+}
+
 function init() {
   encre = document.createElement('canvas');
   encre.width = canvas.width; encre.height = canvas.height;
   encreCtx = encre.getContext('2d');
+
+  if (canvas.__turtleStage) {
+    try { canvas.__turtleStage.enableDOMEvents(false); } catch (e) {}
+  }
+  stage = new createjs.Stage(canvas);
+  stage.autoClear = false;
+  stage.enableMouseOver(20);
+  canvas.__turtleStage = stage;
+
+  stage.on('stagemousedown', (evt) => {
+    if (evt.stageY >= HUD_TOP) return;
+    modeAuto = false;
+    fileManuelle.push({ type: 'goto', x: evt.stageX - canvas.width / 2, y: canvas.height / 2 - evt.stageY });
+  });
+
+  construirePanneau();
   chargerMotif(0);
 }
 
 function update(dt) {
-  while (commands.length) {
-    const cmd = commands.shift();
-    if (cmd.type === 'shape') {
-      const idx = MOTIFS.findIndex(mo => mo.nom.toLowerCase() === String(cmd.name || '').toLowerCase());
-      if (idx >= 0) chargerMotif(idx);
-    } else if (cmd.type === 'avance') {
-      modeAuto = false;
-      fileManuelle.push({ type: 'fwd', value: Number(cmd.value) || 0 });
-    } else if (cmd.type === 'aller') {
-      modeAuto = false;
-      fileManuelle.push({ type: 'goto', x: Number(cmd.x) || 0, y: Number(cmd.y) || 0 });
-    } else if (cmd.type === 'penup') {
-      tortue.crayonBaisse = false;
-    } else if (cmd.type === 'pendown') {
-      tortue.crayonBaisse = true;
-    } else if (cmd.type === 'clear') {
-      encreCtx.clearRect(0, 0, encre.width, encre.height);
-      tortue.x = 0; tortue.y = 0; tortue.cap = 0;
-      fileManuelle = []; mouvementManuel = null;
-      modeAuto = false;
-    } else if (cmd.type === 'pause') {
-      modeAuto = false;
-    } else if (cmd.type === 'resume') {
-      modeAuto = true;
-    }
-  }
-
   for (let k = 1; k <= 6; k++) {
     const touche = 'Digit' + k;
     if (keys[touche]) { keys[touche] = false; chargerMotif(k - 1); }
   }
   if (keys.Space) { keys.Space = false; chargerMotif(motifActuel); }
 
-  report({ x: Math.round(tortue.x), y: Math.round(tortue.y), cap: Math.round(((tortue.cap % 360) + 360) % 360), auto: modeAuto });
+  if (texteLabelCrayon) texteLabelCrayon.text = tortue.crayonBaisse ? 'Crayon : bas' : 'Crayon : haut';
+  if (texteLabelPause) texteLabelPause.text = modeAuto ? '⏸' : '▶';
+  if (texteCoords) {
+    const cap = Math.round(((tortue.cap % 360) + 360) % 360);
+    texteCoords.text = 'X ' + Math.round(tortue.x) + '   Y ' + Math.round(tortue.y) + '   CAP ' + cap + '°';
+  }
 
   if (!mouvementManuel && fileManuelle.length) {
     mouvementManuel = creerCommandeManuelle(fileManuelle.shift());
@@ -1234,8 +1308,6 @@ function update(dt) {
     return;
   }
 
-  // En mode manuel (après Tracer/Aller à), la démo reste en pause : elle
-  // n'enchaîne plus les motifs jusqu'à ce qu'on choisisse une forme.
   if (!modeAuto) return;
 
   if (termine) {
@@ -1294,6 +1366,7 @@ function draw(ctx) {
   ctx.drawImage(encre, 0, 0);
   dessinerTortue(ctx);
   dessinerHUD(ctx);
+  stage.update();
 }`
   }
 ];

@@ -7,10 +7,8 @@ const sceneRunner = {
   userState: null,
   keys: null,
   mouse: null,
-  commands: null,
   onLog: null,
   onClear: null,
-  onReport: null,
 
   init(canvas, opts = {}) {
     this.canvas = canvas;
@@ -110,7 +108,6 @@ const sceneRunner = {
 
     this.keys = {};
     this.mouse = { x: 0, y: 0, left: false };
-    this.commands = [];
 
     const canvas = this.canvas;
     const ctx = this.ctx;
@@ -122,7 +119,6 @@ const sceneRunner = {
       mouse: this.mouse,
       sprites: spriteCanvases,
       canvas: this.canvas,
-      commands: this.commands,
       rand(min, max) { return Math.random() * (max - min) + min; },
       clamp(val, min, max) { return Math.max(min, Math.min(max, val)); },
       rectCollide(a, b) {
@@ -135,8 +131,7 @@ const sceneRunner = {
           a.play().catch(() => {});
         } catch (e) { }
       },
-      log(msg) { runner.log(msg); },
-      report(data) { runner.onReport && runner.onReport(data); }
+      log(msg) { runner.log(msg); }
     };
 
     const contextVars = Object.keys(api);
@@ -192,10 +187,6 @@ const sceneRunner = {
     } catch (e) {
       this.log('Error compiling game: ' + e.message, 'error');
     }
-  },
-
-  sendCommand(cmd) {
-    if (this.commands) this.commands.push(cmd);
   },
 
   stop() {
