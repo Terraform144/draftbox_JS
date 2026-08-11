@@ -349,6 +349,21 @@ tokenize('REPETE 4 [ AV 100 TD 90 ]');
 }</code></pre>
 <p>Un <code>ResizeObserver</code> sur le canvas rappelle cette fonction à chaque redimensionnement (plein écran compris), pour que les champs restent alignés au pixel près. Et comme ces éléments HTML ne disparaissent pas tout seuls, la démo définit une fonction <code>destroy()</code> — un quatrième hook optionnel, au même titre que <code>init</code>/<code>update</code>/<code>draw</code> — que DraftBox appelle automatiquement à l'arrêt du jeu pour retirer proprement l'overlay et désactiver le <code>Stage</code> CreateJS.</p>
 
+<h2>Taper son propre programme</h2>
+<p>Les six figures et les boutons Tracer/Aller passent tous par le même interpréteur ; rien n'empêche de lui donner directement un programme complet. La démo ajoute donc un vrai <code>&lt;input type="text"&gt;</code> pour ça, avec une liste déroulante d'exemples à charger dedans avant de cliquer <strong>Exécuter</strong> (ou Entrée) :</p>
+<pre><code>function chargerProgrammePerso(texte) {
+  let programme;
+  try {
+    programme = walk(parse(tokenize(texte)));
+  } catch (e) {
+    erreurMessage = e.message; // affiché dans le panneau au lieu de planter
+    return;
+  }
+  file = programme;
+  // ... réinitialise la tortue et lance l'exécution comme un motif normal
+}</code></pre>
+<p>Une erreur de syntaxe (crochet manquant, commande inconnue…) s'affiche simplement dans le panneau au lieu de faire planter la démo — essayez par exemple <code>REPETE 3 [ AV 2 TD 144 ]</code>, un triangle qui ne se referme jamais tout à fait puisque 3 × 144° ne fait pas 360°.</p>
+
 <h2>Essayer la démo</h2>
 <p>La démo enchaîne toute seule six figures classiques — carré, triangle, hexagone, étoile, fleur et spirale. Une fois lancée dans la <strong>Scène</strong>, tout se pilote depuis le panneau en bas du canvas :</p>
 <ul>
@@ -356,9 +371,10 @@ tokenize('REPETE 4 [ AV 100 TD 90 ]');
   <li><strong>X, Y + Tracer</strong> — trace un trait jusqu'à ces coordonnées, même si le crayon est actuellement levé</li>
   <li><strong>X, Y + Aller</strong> — déplace la tortue jusqu'à ces coordonnées sans rien dessiner, même si le crayon est actuellement baissé</li>
   <li><strong>Clic sur le dessin</strong> — même destination à la souris, mais respecte l'état actuel du crayon</li>
+  <li><strong>Liste déroulante + champ Programme + Exécuter</strong> — tape ou charge un programme Logo complet et lance-le</li>
   <li><strong>Crayon</strong> — lève ou baisse le crayon</li>
   <li><strong>Effacer</strong> — efface le dessin et recentre la tortue</li>
-  <li><strong>⏸ / ▶</strong> — met en pause ou relance le motif en cours</li>
+  <li><strong>⏸ / ▶</strong> — met en pause ou relance le motif (ou le programme personnalisé) en cours</li>
   <li><strong>1 à 6 / ESPACE</strong> — les mêmes raccourcis clavier restent disponibles</li>
 </ul>
 

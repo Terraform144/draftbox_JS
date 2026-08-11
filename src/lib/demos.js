@@ -1018,14 +1018,15 @@ function draw(ctx) {
 
   {
     name: 'Tortue Logo',
-    desc: 'Mini-interpréteur du langage Logo (1967), avec un panneau de commande CreateJS dessiné directement sur le canvas : choisis une forme, trace toi-même avec Tracer/Aller (distance et coordonnées x,y), lève/baisse le crayon, efface, ou clique sur le dessin pour y envoyer la tortue.',
+    desc: 'Mini-interpréteur du langage Logo (1967), avec un panneau de commande CreateJS dessiné directement sur le canvas : choisis une forme, tape et exécute ton propre programme (ex. REPETE 3 [ AV 2 TD 144 ]), trace/aller vers des coordonnées x,y, lève/baisse le crayon, efface, ou clique sur le dessin pour y envoyer la tortue.',
     code: `// TORTUE LOGO — mini-interpréteur inspiré du langage Logo (1967)
 // Panneau de commande dessiné avec CreateJS, directement sur le canvas de la scène
 // (aucune interface HTML dans l'app — tout est ici, dans le code de la démo).
-// Les champs de coordonnées X/Y sont de vrais <input> HTML, posés au-dessus
-// du canvas et calés sur lui : CreateJS ne sait pas dessiner une vraie zone
-// de texte, donc on triche avec de vrais inputs superposés. Tracer force le
-// crayon baissé jusqu'à ce point, Aller force le crayon levé.
+// Les champs de coordonnées X/Y et le champ de programme sont de vrais
+// <input>/<select> HTML, posés au-dessus du canvas et calés sur lui : CreateJS
+// ne sait pas dessiner une vraie zone de texte, donc on triche avec de vrais
+// éléments de formulaire superposés. Tracer force le crayon baissé jusqu'à ce
+// point, Aller force le crayon levé.
 
 const ALIASES = {
   AVANCE: 'fwd', AV: 'fwd', FORWARD: 'fwd', FD: 'fwd',
@@ -1111,13 +1112,14 @@ const MOTIFS = [
 const VITESSE_AV = 260;
 const VITESSE_ROT = 260;
 const PAUSE_FIN = 1.6;
-const HUD_TOP = 450; // le panneau (CreateJS + inputs HTML) occupe la bande du bas
-const RANGEE2_Y = 40; // 2e rangée, relative au panneau
+const HUD_TOP = 414; // le panneau (CreateJS + inputs HTML) occupe la bande du bas
+const RANGEE2_Y = 40; // rangée Tracer/Aller, relative au panneau
 
 let encre, encreCtx;
 let tortue;
 let file, fi, mouvement, motifActuel, termine, minuteur;
 let fileManuelle = [], mouvementManuel = null, modeAuto = true;
+let programmePerso = null, erreurMessage = '';
 let stage, texteLabelCrayon, texteLabelPause, texteCoords;
 let overlay, champX, champY, observateur, gestionnaireResize;
 
@@ -1183,12 +1185,30 @@ function tracerSegment(x0, y0, x1, y1, couleur, epaisseur) {
 
 function chargerMotif(index) {
   motifActuel = ((index % MOTIFS.length) + MOTIFS.length) % MOTIFS.length;
+  programmePerso = null; erreurMessage = '';
   const m = MOTIFS[motifActuel];
   file = walk(parse(tokenize(m.code)));
   fi = 0; mouvement = null; termine = false; minuteur = 0;
   fileManuelle = []; mouvementManuel = null; modeAuto = true;
   encreCtx.clearRect(0, 0, encre.width, encre.height);
   tortue = { x: 0, y: 0, cap: 0, crayonBaisse: true, couleur: m.couleur, epaisseur: 3, visible: true };
+}
+
+function chargerProgrammePerso(texte) {
+  let programme;
+  try {
+    programme = walk(parse(tokenize(texte)));
+    erreurMessage = '';
+  } catch (e) {
+    erreurMessage = e.message;
+    return;
+  }
+  programmePerso = texte;
+  file = programme;
+  fi = 0; mouvement = null; termine = false; minuteur = 0;
+  fileManuelle = []; mouvementManuel = null; modeAuto = true;
+  encreCtx.clearRect(0, 0, encre.width, encre.height);
+  tortue = { x: 0, y: 0, cap: 0, crayonBaisse: true, couleur: '#4ecdc4', epaisseur: 3, visible: true };
 }
 
 // ── Panneau CreateJS (rangée 1 : formes, crayon, effacer, pause, coords) ──
@@ -1294,13 +1314,17 @@ function construireSaisiesHTML() {
   if (getComputedStyle(wrapper).position === 'static') wrapper.style.position = 'relative';
 
   overlay = document.createElement('div');
-  overlay.style.cssText = 'position:absolute;display:flex;align-items:center;gap:6px;' +
+  overlay.style.cssText = 'position:absolute;display:flex;flex-direction:column;gap:8px;' +
     'transform-origin:top left;z-index:6;';
 
-  // Un seul jeu de coordonnées X/Y, utilisé par les deux boutons :
-  // Tracer force le crayon baissé (dessine jusqu'à ce point), Aller force
-  // le crayon levé (s'y déplace sans rien dessiner) — sans toucher à
-  // l'état persistant du crayon (le bouton Crayon garde son propre état).
+  // Rangée A — Un seul jeu de coordonnées X/Y, utilisé par les deux
+  // boutons : Tracer force le crayon baissé (dessine jusqu'à ce point),
+  // Aller force le crayon levé (s'y déplace sans rien dessiner) — sans
+  // toucher à l'état persistant du crayon (le bouton Crayon garde son
+  // propre état).
+  const rangeeDeplacement = document.createElement('div');
+  rangeeDeplacement.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
   champX = creerChampNombre(100, 54);
   champY = creerChampNombre(0, 54);
 
@@ -1318,12 +1342,59 @@ function construireSaisiesHTML() {
     fileManuelle.push({ type: 'goto', x: Number(champX.value) || 0, y: Number(champY.value) || 0, dessiner: false });
   });
 
-  overlay.appendChild(creerEtiquette('X'));
-  overlay.appendChild(champX);
-  overlay.appendChild(creerEtiquette('Y'));
-  overlay.appendChild(champY);
-  overlay.appendChild(boutonTracer);
-  overlay.appendChild(boutonAller);
+  rangeeDeplacement.appendChild(creerEtiquette('X'));
+  rangeeDeplacement.appendChild(champX);
+  rangeeDeplacement.appendChild(creerEtiquette('Y'));
+  rangeeDeplacement.appendChild(champY);
+  rangeeDeplacement.appendChild(boutonTracer);
+  rangeeDeplacement.appendChild(boutonAller);
+
+  // Rangée B — un vrai programme Logo tapé au clavier (ex. "REPETE 3
+  // [ AV 2 TD 144 ]"), avec une liste déroulante d'exemples à charger
+  // dans le champ avant de l'exécuter.
+  const rangeeProgramme = document.createElement('div');
+  rangeeProgramme.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
+  const selecteur = document.createElement('select');
+  selecteur.title = 'Charger un exemple dans le champ';
+  selecteur.style.cssText = 'height:26px;padding:0 4px;border-radius:5px;' +
+    'border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.1);color:#fff;' +
+    'font:12px monospace;box-sizing:border-box;';
+  MOTIFS.forEach((m, i) => {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = m.nom;
+    selecteur.appendChild(opt);
+  });
+
+  const champProgramme = document.createElement('input');
+  champProgramme.type = 'text';
+  champProgramme.value = MOTIFS[0].code;
+  champProgramme.title = 'Un programme Logo, ex. REPETE 3 [ AV 2 TD 144 ]';
+  champProgramme.style.cssText = 'width:360px;height:26px;padding:0 8px;border-radius:5px;' +
+    'border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.1);color:#fff;' +
+    'font:12px monospace;box-sizing:border-box;';
+
+  selecteur.addEventListener('change', () => {
+    champProgramme.value = MOTIFS[Number(selecteur.value)].code;
+  });
+
+  const boutonLancer = creerBoutonHTML('Exécuter');
+  boutonLancer.title = 'Lance ce programme';
+  boutonLancer.addEventListener('click', () => {
+    chargerProgrammePerso(champProgramme.value);
+  });
+  champProgramme.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') chargerProgrammePerso(champProgramme.value);
+  });
+
+  rangeeProgramme.appendChild(creerEtiquette('Prog'));
+  rangeeProgramme.appendChild(selecteur);
+  rangeeProgramme.appendChild(champProgramme);
+  rangeeProgramme.appendChild(boutonLancer);
+
+  overlay.appendChild(rangeeDeplacement);
+  overlay.appendChild(rangeeProgramme);
 
   wrapper.appendChild(overlay);
 
@@ -1390,7 +1461,11 @@ function update(dt) {
     const touche = 'Digit' + k;
     if (keys[touche]) { keys[touche] = false; chargerMotif(k - 1); }
   }
-  if (keys.Space) { keys.Space = false; chargerMotif(motifActuel); }
+  if (keys.Space) {
+    keys.Space = false;
+    if (programmePerso) chargerProgrammePerso(programmePerso);
+    else chargerMotif(motifActuel);
+  }
 
   if (texteLabelCrayon) texteLabelCrayon.text = tortue.crayonBaisse ? 'Crayon : bas' : 'Crayon : haut';
   if (texteLabelPause) texteLabelPause.text = modeAuto ? '⏸' : '▶';
@@ -1411,7 +1486,9 @@ function update(dt) {
 
   if (termine) {
     minuteur -= dt;
-    if (minuteur <= 0) chargerMotif(motifActuel + 1);
+    // Un programme personnalisé ne s'enchaîne pas automatiquement sur le
+    // motif suivant : il reste affiché, terminé, jusqu'à une nouvelle action.
+    if (minuteur <= 0 && !programmePerso) chargerMotif(motifActuel + 1);
     return;
   }
 
@@ -1450,9 +1527,26 @@ function dessinerGrille(ctx) {
 }
 
 function dessinerHUD(ctx) {
-  const m = MOTIFS[motifActuel];
   ctx.fillStyle = '#8892b0'; ctx.font = 'bold 14px monospace';
   ctx.fillText('TORTUE LOGO', 16, 26);
+
+  if (erreurMessage) {
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 20px monospace';
+    ctx.fillText('Erreur dans le programme', 16, 52);
+    ctx.fillStyle = '#ff6b81'; ctx.font = '13px monospace';
+    ctx.fillText(erreurMessage, 16, 74);
+    return;
+  }
+
+  if (programmePerso) {
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 20px monospace';
+    ctx.fillText('Programme personnalisé', 16, 52);
+    ctx.fillStyle = '#8892b0'; ctx.font = '13px monospace';
+    ctx.fillText(programmePerso, 16, 74);
+    return;
+  }
+
+  const m = MOTIFS[motifActuel];
   ctx.fillStyle = '#fff'; ctx.font = 'bold 20px monospace';
   ctx.fillText(m.nom, 16, 52);
   ctx.fillStyle = '#8892b0'; ctx.font = '13px monospace';
