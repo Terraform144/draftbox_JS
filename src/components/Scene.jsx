@@ -157,9 +157,33 @@ export default function Scene({ show, onRun }) {
   }, []);
 
   useEffect(() => {
-    const handler = () => setIsFullscreen(!!getFullscreenElement());
-    FULLSCREEN_CHANGE_EVENTS.forEach(evt => document.addEventListener(evt, handler));
-    return () => FULLSCREEN_CHANGE_EVENTS.forEach(evt => document.removeEventListener(evt, handler));
+    // Compute the canvas pixel size directly instead of relying only on CSS
+    // (object-fit on <canvas> and :fullscreen sizing behave inconsistently
+    // across browsers/embeds), so fullscreen zoom is guaranteed everywhere.
+    const applySize = () => {
+      const canvas = canvasRef.current;
+      const fsEl = getFullscreenElement();
+      const active = !!fsEl && fsEl === wrapperRef.current;
+      setIsFullscreen(active);
+      if (!canvas) return;
+      if (active) {
+        const ratio = 960 / 540;
+        let w = window.innerWidth;
+        let h = w / ratio;
+        if (h > window.innerHeight) { h = window.innerHeight; w = h * ratio; }
+        canvas.style.width = Math.round(w) + 'px';
+        canvas.style.height = Math.round(h) + 'px';
+      } else {
+        canvas.style.width = '';
+        canvas.style.height = '';
+      }
+    };
+    FULLSCREEN_CHANGE_EVENTS.forEach(evt => document.addEventListener(evt, applySize));
+    window.addEventListener('resize', applySize);
+    return () => {
+      FULLSCREEN_CHANGE_EVENTS.forEach(evt => document.removeEventListener(evt, applySize));
+      window.removeEventListener('resize', applySize);
+    };
   }, []);
 
   const handleStop = useCallback(() => {
