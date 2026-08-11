@@ -337,7 +337,7 @@ tokenize('REPETE 4 [ AV 100 TD 90 ]');
   stage.update(); // pose le panneau CreateJS par-dessus, sans re-effacer</code></pre>
 
 <h2>Saisir des nombres — de vrais &lt;input&gt; par-dessus le canvas</h2>
-<p>CreateJS sait dessiner des boutons, mais pas un vrai champ de texte éditable. Pour la distance de <strong>Tracer</strong> et les coordonnées d'<strong>Aller</strong>, la démo crée directement de vrais <code>&lt;input type="number"&gt;</code> HTML et les pose au-dessus du canvas, calés sur la deuxième rangée du panneau :</p>
+<p>CreateJS sait dessiner des boutons, mais pas un vrai champ de texte éditable. Pour les coordonnées X/Y partagées par <strong>Tracer</strong> et <strong>Aller</strong>, la démo crée directement de vrais <code>&lt;input type="number"&gt;</code> HTML et les pose au-dessus du canvas, calés sur la deuxième rangée du panneau :</p>
 <pre><code>function positionnerSaisiesHTML() {
   const rectCanvas = canvas.getBoundingClientRect();
   const rectParent = canvas.parentElement.getBoundingClientRect();
@@ -353,9 +353,9 @@ tokenize('REPETE 4 [ AV 100 TD 90 ]');
 <p>La démo enchaîne toute seule six figures classiques — carré, triangle, hexagone, étoile, fleur et spirale. Une fois lancée dans la <strong>Scène</strong>, tout se pilote depuis le panneau en bas du canvas :</p>
 <ul>
   <li><strong>Carré / Triangle / Hexagone / Étoile / Fleur / Spirale</strong> — lance directement ce motif</li>
-  <li><strong>Dist + Tracer</strong> — avance la tortue de la distance saisie (met le dessin automatique en pause)</li>
-  <li><strong>X, Y + Aller</strong> — envoie la tortue exactement à ces coordonnées</li>
-  <li><strong>Clic sur le dessin</strong> — fait la même chose qu'Aller, mais à la souris</li>
+  <li><strong>X, Y + Tracer</strong> — trace un trait jusqu'à ces coordonnées, même si le crayon est actuellement levé</li>
+  <li><strong>X, Y + Aller</strong> — déplace la tortue jusqu'à ces coordonnées sans rien dessiner, même si le crayon est actuellement baissé</li>
+  <li><strong>Clic sur le dessin</strong> — même destination à la souris, mais respecte l'état actuel du crayon</li>
   <li><strong>Crayon</strong> — lève ou baisse le crayon</li>
   <li><strong>Effacer</strong> — efface le dessin et recentre la tortue</li>
   <li><strong>⏸ / ▶</strong> — met en pause ou relance le motif en cours</li>

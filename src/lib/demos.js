@@ -1022,9 +1022,10 @@ function draw(ctx) {
     code: `// TORTUE LOGO — mini-interpréteur inspiré du langage Logo (1967)
 // Panneau de commande dessiné avec CreateJS, directement sur le canvas de la scène
 // (aucune interface HTML dans l'app — tout est ici, dans le code de la démo).
-// Les deux champs numériques (Tracer / Aller) sont de vrais <input> HTML,
-// posés au-dessus du canvas et calés sur lui : CreateJS ne sait pas dessiner
-// une vraie zone de texte, donc on triche avec deux inputs superposés.
+// Les champs de coordonnées X/Y sont de vrais <input> HTML, posés au-dessus
+// du canvas et calés sur lui : CreateJS ne sait pas dessiner une vraie zone
+// de texte, donc on triche avec de vrais inputs superposés. Tracer force le
+// crayon baissé jusqu'à ce point, Aller force le crayon levé.
 
 const ALIASES = {
   AVANCE: 'fwd', AV: 'fwd', FORWARD: 'fwd', FD: 'fwd',
@@ -1118,7 +1119,7 @@ let tortue;
 let file, fi, mouvement, motifActuel, termine, minuteur;
 let fileManuelle = [], mouvementManuel = null, modeAuto = true;
 let stage, texteLabelCrayon, texteLabelPause, texteCoords;
-let overlay, champDistance, champX, champY, observateur, gestionnaireResize;
+let overlay, champX, champY, observateur, gestionnaireResize;
 
 function creerCommande(cmd) {
   if (cmd.type === 'fwd' || cmd.type === 'bwd') {
@@ -1164,12 +1165,11 @@ function avancerCommande(m, dt) {
 }
 
 function creerCommandeManuelle(cmd) {
-  if (cmd.type === 'fwd') {
-    const rad = tortue.cap * Math.PI / 180;
-    const x1 = tortue.x + Math.sin(rad) * cmd.value, y1 = tortue.y + Math.cos(rad) * cmd.value;
-    return { type: 'avance', x0: tortue.x, y0: tortue.y, x1, y1, total: Math.abs(cmd.value), fait: 0, couleur: tortue.couleur, epaisseur: tortue.epaisseur, crayon: tortue.crayonBaisse };
-  }
-  return { type: 'avance', x0: tortue.x, y0: tortue.y, x1: cmd.x, y1: cmd.y, total: Math.hypot(cmd.x - tortue.x, cmd.y - tortue.y), fait: 0, couleur: tortue.couleur, epaisseur: tortue.epaisseur, crayon: tortue.crayonBaisse };
+  // cmd.dessiner force le tracé (bouton Tracer) ou son absence (bouton
+  // Aller), sans changer l'état persistant du crayon. Un clic sur le
+  // dessin (sans dessiner défini) respecte l'état actuel du crayon.
+  const dessiner = cmd.dessiner !== undefined ? cmd.dessiner : tortue.crayonBaisse;
+  return { type: 'avance', x0: tortue.x, y0: tortue.y, x1: cmd.x, y1: cmd.y, total: Math.hypot(cmd.x - tortue.x, cmd.y - tortue.y), fait: 0, couleur: tortue.couleur, epaisseur: tortue.epaisseur, crayon: dessiner };
 }
 
 function versEcran(x, y) { return [canvas.width / 2 + x, canvas.height / 2 - y]; }
@@ -1297,39 +1297,33 @@ function construireSaisiesHTML() {
   overlay.style.cssText = 'position:absolute;display:flex;align-items:center;gap:6px;' +
     'transform-origin:top left;z-index:6;';
 
-  const groupeTracer = document.createElement('div');
-  groupeTracer.style.cssText = 'display:flex;align-items:center;gap:6px;';
-  champDistance = creerChampNombre(60, 56);
+  // Un seul jeu de coordonnées X/Y, utilisé par les deux boutons :
+  // Tracer force le crayon baissé (dessine jusqu'à ce point), Aller force
+  // le crayon levé (s'y déplace sans rien dessiner) — sans toucher à
+  // l'état persistant du crayon (le bouton Crayon garde son propre état).
+  champX = creerChampNombre(100, 54);
+  champY = creerChampNombre(0, 54);
+
   const boutonTracer = creerBoutonHTML('Tracer');
+  boutonTracer.title = 'Trace un trait jusqu’à ces coordonnées';
   boutonTracer.addEventListener('click', () => {
     modeAuto = false;
-    fileManuelle.push({ type: 'fwd', value: Number(champDistance.value) || 0 });
+    fileManuelle.push({ type: 'goto', x: Number(champX.value) || 0, y: Number(champY.value) || 0, dessiner: true });
   });
-  groupeTracer.appendChild(creerEtiquette('Dist'));
-  groupeTracer.appendChild(champDistance);
-  groupeTracer.appendChild(boutonTracer);
 
-  const separateur = document.createElement('div');
-  separateur.style.cssText = 'width:1px;height:20px;background:rgba(255,255,255,0.2);';
-
-  const groupeAller = document.createElement('div');
-  groupeAller.style.cssText = 'display:flex;align-items:center;gap:6px;';
-  champX = creerChampNombre(0, 50);
-  champY = creerChampNombre(0, 50);
   const boutonAller = creerBoutonHTML('Aller');
+  boutonAller.title = 'Déplace la tortue sans dessiner';
   boutonAller.addEventListener('click', () => {
     modeAuto = false;
-    fileManuelle.push({ type: 'goto', x: Number(champX.value) || 0, y: Number(champY.value) || 0 });
+    fileManuelle.push({ type: 'goto', x: Number(champX.value) || 0, y: Number(champY.value) || 0, dessiner: false });
   });
-  groupeAller.appendChild(creerEtiquette('X'));
-  groupeAller.appendChild(champX);
-  groupeAller.appendChild(creerEtiquette('Y'));
-  groupeAller.appendChild(champY);
-  groupeAller.appendChild(boutonAller);
 
-  overlay.appendChild(groupeTracer);
-  overlay.appendChild(separateur);
-  overlay.appendChild(groupeAller);
+  overlay.appendChild(creerEtiquette('X'));
+  overlay.appendChild(champX);
+  overlay.appendChild(creerEtiquette('Y'));
+  overlay.appendChild(champY);
+  overlay.appendChild(boutonTracer);
+  overlay.appendChild(boutonAller);
 
   wrapper.appendChild(overlay);
 
