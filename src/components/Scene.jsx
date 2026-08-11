@@ -3,27 +3,6 @@ import sceneRunner from '../lib/scene-runner';
 
 const SHAPES = ['Carré', 'Triangle', 'Hexagone', 'Étoile', 'Fleur', 'Spirale'];
 
-function getFullscreenElement() {
-  return document.fullscreenElement || document.webkitFullscreenElement ||
-    document.mozFullScreenElement || document.msFullscreenElement || null;
-}
-
-function requestFullscreen(el) {
-  const fn = el.requestFullscreen || el.webkitRequestFullscreen ||
-    el.mozRequestFullScreen || el.msRequestFullscreen;
-  if (!fn) return Promise.reject(new Error('Fullscreen API not supported on this browser'));
-  return fn.call(el);
-}
-
-function exitFullscreen() {
-  const fn = document.exitFullscreen || document.webkitExitFullscreen ||
-    document.mozCancelFullScreen || document.msExitFullscreen;
-  if (!fn) return Promise.reject(new Error('Fullscreen API not supported on this browser'));
-  return fn.call(document);
-}
-
-const FULLSCREEN_CHANGE_EVENTS = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
-
 function TurtlePanel({ report }) {
   const [shape, setShape] = useState(SHAPES[0]);
   const [distance, setDistance] = useState(60);
@@ -136,11 +115,13 @@ export default function Scene({ show, onRun }) {
   const [logs, setLogs] = useState([]);
   const [touchState, setTouchState] = useState({});
   const [turtleReport, setTurtleReport] = useState(null);
+  // CSS-only "fake" fullscreen (position:fixed overlay) instead of the
+  // native Fullscreen API: the app is commonly embedded in an <iframe>
+  // (e.g. gamecreator.debrouillard.be) that isn't granted the "fullscreen"
+  // Permissions-Policy, which makes element.requestFullscreen() silently
+  // reject in there. A CSS overlay needs no permission and works the same
+  // whether the page is top-level or embedded.
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fullscreenSupported] = useState(() => {
-    const el = document.documentElement;
-    return !!(el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen);
-  });
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -157,34 +138,30 @@ export default function Scene({ show, onRun }) {
   }, []);
 
   useEffect(() => {
-    // Compute the canvas pixel size directly instead of relying only on CSS
-    // (object-fit on <canvas> and :fullscreen sizing behave inconsistently
-    // across browsers/embeds), so fullscreen zoom is guaranteed everywhere.
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    if (!isFullscreen) {
+      canvas.style.width = '';
+      canvas.style.height = '';
+      return;
+    }
     const applySize = () => {
-      const canvas = canvasRef.current;
-      const fsEl = getFullscreenElement();
-      const active = !!fsEl && fsEl === wrapperRef.current;
-      setIsFullscreen(active);
-      if (!canvas) return;
-      if (active) {
-        const ratio = 960 / 540;
-        let w = window.innerWidth;
-        let h = w / ratio;
-        if (h > window.innerHeight) { h = window.innerHeight; w = h * ratio; }
-        canvas.style.width = Math.round(w) + 'px';
-        canvas.style.height = Math.round(h) + 'px';
-      } else {
-        canvas.style.width = '';
-        canvas.style.height = '';
-      }
+      const ratio = 960 / 540;
+      let w = window.innerWidth;
+      let h = w / ratio;
+      if (h > window.innerHeight) { h = window.innerHeight; w = h * ratio; }
+      canvas.style.width = Math.round(w) + 'px';
+      canvas.style.height = Math.round(h) + 'px';
     };
-    FULLSCREEN_CHANGE_EVENTS.forEach(evt => document.addEventListener(evt, applySize));
+    applySize();
     window.addEventListener('resize', applySize);
+    const onKey = (e) => { if (e.key === 'Escape') setIsFullscreen(false); };
+    document.addEventListener('keydown', onKey);
     return () => {
-      FULLSCREEN_CHANGE_EVENTS.forEach(evt => document.removeEventListener(evt, applySize));
       window.removeEventListener('resize', applySize);
+      document.removeEventListener('keydown', onKey);
     };
-  }, []);
+  }, [isFullscreen]);
 
   const handleStop = useCallback(() => {
     sceneRunner.stop();
@@ -197,14 +174,7 @@ export default function Scene({ show, onRun }) {
   }, []);
 
   const handleToggleFullscreen = useCallback(() => {
-    if (!getFullscreenElement()) {
-      if (!wrapperRef.current) return;
-      requestFullscreen(wrapperRef.current).catch((err) => {
-        console.warn('Plein écran indisponible :', err.message);
-      });
-    } else {
-      exitFullscreen().catch(() => {});
-    }
+    setIsFullscreen(f => !f);
   }, []);
 
   const handleTouchStart = useCallback((keyCode) => (e) => {
@@ -250,26 +220,24 @@ export default function Scene({ show, onRun }) {
           </div>
         </div>
         <div className="scene-body">
-          <div className="scene-canvas-wrapper" ref={wrapperRef}>
+          <div className={'scene-canvas-wrapper' + (isFullscreen ? ' pseudo-fullscreen' : '')} ref={wrapperRef}>
             <canvas ref={canvasRef} id="sceneCanvas" width="960" height="540"></canvas>
-            {fullscreenSupported && (
-              <button
-                className="scene-fullscreen-btn"
-                onClick={handleToggleFullscreen}
-                title={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
-                aria-label={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
-              >
-                {isFullscreen ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 4v3a2 2 0 0 1-2 2H4" /><path d="M20 9h-3a2 2 0 0 1-2-2V4" /><path d="M4 15h3a2 2 0 0 1 2 2v3" /><path d="M15 20v-3a2 2 0 0 1 2-2h3" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 9V6a2 2 0 0 1 2-2h3" /><path d="M15 4h3a2 2 0 0 1 2 2v3" /><path d="M20 15v3a2 2 0 0 1-2 2h-3" /><path d="M9 20H6a2 2 0 0 1-2-2v-3" />
-                  </svg>
-                )}
-              </button>
-            )}
+            <button
+              className="scene-fullscreen-btn"
+              onClick={handleToggleFullscreen}
+              title={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+              aria-label={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+            >
+              {isFullscreen ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 4v3a2 2 0 0 1-2 2H4" /><path d="M20 9h-3a2 2 0 0 1-2-2V4" /><path d="M4 15h3a2 2 0 0 1 2 2v3" /><path d="M15 20v-3a2 2 0 0 1 2-2h3" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 9V6a2 2 0 0 1 2-2h3" /><path d="M15 4h3a2 2 0 0 1 2 2v3" /><path d="M20 15v3a2 2 0 0 1-2 2h-3" /><path d="M9 20H6a2 2 0 0 1-2-2v-3" />
+                </svg>
+              )}
+            </button>
             <TurtlePanel report={turtleReport} />
           </div>
           <div className="scene-output">
