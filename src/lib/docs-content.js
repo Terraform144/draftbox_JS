@@ -336,15 +336,29 @@ tokenize('REPETE 4 [ AV 100 TD 90 ]');
   // ... dessine la grille, l'encre, la tortue ...
   stage.update(); // pose le panneau CreateJS par-dessus, sans re-effacer</code></pre>
 
+<h2>Saisir des nombres — de vrais &lt;input&gt; par-dessus le canvas</h2>
+<p>CreateJS sait dessiner des boutons, mais pas un vrai champ de texte éditable. Pour la distance de <strong>Tracer</strong> et les coordonnées d'<strong>Aller</strong>, la démo crée directement de vrais <code>&lt;input type="number"&gt;</code> HTML et les pose au-dessus du canvas, calés sur la deuxième rangée du panneau :</p>
+<pre><code>function positionnerSaisiesHTML() {
+  const rectCanvas = canvas.getBoundingClientRect();
+  const rectParent = canvas.parentElement.getBoundingClientRect();
+  const echelle = rectCanvas.width / canvas.width; // 960 = résolution interne
+
+  overlay.style.left = (rectCanvas.left - rectParent.left + 10 * echelle) + 'px';
+  overlay.style.top = (rectCanvas.top - rectParent.top + (HUD_TOP + RANGEE2_Y) * echelle) + 'px';
+  overlay.style.transform = 'scale(' + echelle + ')'; // suit le zoom/plein écran du canvas
+}</code></pre>
+<p>Un <code>ResizeObserver</code> sur le canvas rappelle cette fonction à chaque redimensionnement (plein écran compris), pour que les champs restent alignés au pixel près. Et comme ces éléments HTML ne disparaissent pas tout seuls, la démo définit une fonction <code>destroy()</code> — un quatrième hook optionnel, au même titre que <code>init</code>/<code>update</code>/<code>draw</code> — que DraftBox appelle automatiquement à l'arrêt du jeu pour retirer proprement l'overlay et désactiver le <code>Stage</code> CreateJS.</p>
+
 <h2>Essayer la démo</h2>
 <p>La démo enchaîne toute seule six figures classiques — carré, triangle, hexagone, étoile, fleur et spirale. Une fois lancée dans la <strong>Scène</strong>, tout se pilote depuis le panneau en bas du canvas :</p>
 <ul>
   <li><strong>Carré / Triangle / Hexagone / Étoile / Fleur / Spirale</strong> — lance directement ce motif</li>
-  <li><strong>Avancer</strong> — fait avancer la tortue d'un cran (met le dessin automatique en pause)</li>
+  <li><strong>Dist + Tracer</strong> — avance la tortue de la distance saisie (met le dessin automatique en pause)</li>
+  <li><strong>X, Y + Aller</strong> — envoie la tortue exactement à ces coordonnées</li>
+  <li><strong>Clic sur le dessin</strong> — fait la même chose qu'Aller, mais à la souris</li>
   <li><strong>Crayon</strong> — lève ou baisse le crayon</li>
   <li><strong>Effacer</strong> — efface le dessin et recentre la tortue</li>
   <li><strong>⏸ / ▶</strong> — met en pause ou relance le motif en cours</li>
-  <li><strong>Clic sur le dessin</strong> — envoie la tortue à cet endroit précis (l'équivalent d'un « Aller à » à la souris)</li>
   <li><strong>1 à 6 / ESPACE</strong> — les mêmes raccourcis clavier restent disponibles</li>
 </ul>
 

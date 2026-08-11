@@ -143,7 +143,8 @@ const sceneRunner = {
         code + '\n' +
         'return { init: typeof init !== "undefined" ? init : function(){}, ' +
         'update: typeof update !== "undefined" ? update : function(dt){}, ' +
-        'draw: typeof draw !== "undefined" ? draw : function(ctx){} };'
+        'draw: typeof draw !== "undefined" ? draw : function(ctx){}, ' +
+        'destroy: typeof destroy !== "undefined" ? destroy : function(){} };'
       );
 
       const game = gameFn(...contextValues);
@@ -194,6 +195,10 @@ const sceneRunner = {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+    if (this.userState && typeof this.userState.destroy === 'function') {
+      try { this.userState.destroy(); } catch (e) { this.log('destroy() error: ' + e.message, 'error'); }
+    }
+    this.userState = null;
     this.running = false;
     this.log('Game stopped.', 'warn');
   },

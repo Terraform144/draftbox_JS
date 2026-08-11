@@ -1018,10 +1018,13 @@ function draw(ctx) {
 
   {
     name: 'Tortue Logo',
-    desc: 'Mini-interpréteur du langage Logo (1967), avec un panneau de commande CreateJS dessiné directement sur le canvas : choisis une forme, avance, lève/baisse le crayon, efface, ou clique sur le dessin pour y envoyer la tortue.',
+    desc: 'Mini-interpréteur du langage Logo (1967), avec un panneau de commande CreateJS dessiné directement sur le canvas : choisis une forme, trace toi-même avec Tracer/Aller (distance et coordonnées x,y), lève/baisse le crayon, efface, ou clique sur le dessin pour y envoyer la tortue.',
     code: `// TORTUE LOGO — mini-interpréteur inspiré du langage Logo (1967)
 // Panneau de commande dessiné avec CreateJS, directement sur le canvas de la scène
-// (aucune interface HTML — tout est ici, dans le code de la démo).
+// (aucune interface HTML dans l'app — tout est ici, dans le code de la démo).
+// Les deux champs numériques (Tracer / Aller) sont de vrais <input> HTML,
+// posés au-dessus du canvas et calés sur lui : CreateJS ne sait pas dessiner
+// une vraie zone de texte, donc on triche avec deux inputs superposés.
 
 const ALIASES = {
   AVANCE: 'fwd', AV: 'fwd', FORWARD: 'fwd', FD: 'fwd',
@@ -1107,13 +1110,15 @@ const MOTIFS = [
 const VITESSE_AV = 260;
 const VITESSE_ROT = 260;
 const PAUSE_FIN = 1.6;
-const HUD_TOP = 484; // le panneau CreateJS occupe la bande du bas, sous cette ligne
+const HUD_TOP = 450; // le panneau (CreateJS + inputs HTML) occupe la bande du bas
+const RANGEE2_Y = 40; // 2e rangée, relative au panneau
 
 let encre, encreCtx;
 let tortue;
 let file, fi, mouvement, motifActuel, termine, minuteur;
 let fileManuelle = [], mouvementManuel = null, modeAuto = true;
 let stage, texteLabelCrayon, texteLabelPause, texteCoords;
+let overlay, champDistance, champX, champY, observateur, gestionnaireResize;
 
 function creerCommande(cmd) {
   if (cmd.type === 'fwd' || cmd.type === 'bwd') {
@@ -1186,7 +1191,7 @@ function chargerMotif(index) {
   tortue = { x: 0, y: 0, cap: 0, crayonBaisse: true, couleur: m.couleur, epaisseur: 3, visible: true };
 }
 
-// ── Panneau de commande CreateJS ──────────────────────────────────────────
+// ── Panneau CreateJS (rangée 1 : formes, crayon, effacer, pause, coords) ──
 
 function creerBouton(parent, label, x, y, largeurMin, onClick) {
   const pad = 10, hauteur = 26;
@@ -1207,7 +1212,7 @@ function creerBouton(parent, label, x, y, largeurMin, onClick) {
   return { cont, fond, txt, largeur, hauteur };
 }
 
-function construirePanneau() {
+function construirePanneauCreateJS() {
   const panneau = new createjs.Container();
   panneau.x = 0; panneau.y = HUD_TOP;
 
@@ -1224,19 +1229,13 @@ function construirePanneau() {
   });
 
   x += 8;
-  let b = creerBouton(panneau, 'Avancer', x, y1, 0, () => {
-    modeAuto = false;
-    fileManuelle.push({ type: 'fwd', value: 60 });
-  });
-  x += b.largeur + 8;
-
   const boutonCrayon = creerBouton(panneau, '', x, y1, 96, () => {
     tortue.crayonBaisse = !tortue.crayonBaisse;
   });
   texteLabelCrayon = boutonCrayon.txt;
   x += boutonCrayon.largeur + 8;
 
-  b = creerBouton(panneau, 'Effacer', x, y1, 0, () => {
+  const b = creerBouton(panneau, 'Effacer', x, y1, 0, () => {
     encreCtx.clearRect(0, 0, encre.width, encre.height);
     tortue.x = 0; tortue.y = 0; tortue.cap = 0;
     fileManuelle = []; mouvementManuel = null;
@@ -1249,10 +1248,6 @@ function construirePanneau() {
   });
   texteLabelPause = boutonPause.txt;
 
-  const legende = new createjs.Text('Clique sur le dessin pour y envoyer la tortue', '10px monospace', 'rgba(255,255,255,0.5)');
-  legende.x = 10; legende.y = y1 + 26 + 10;
-  panneau.addChild(legende);
-
   texteCoords = new createjs.Text('', '12px monospace', '#cfd8dc');
   texteCoords.textAlign = 'right';
   texteCoords.textBaseline = 'middle';
@@ -1261,6 +1256,107 @@ function construirePanneau() {
   panneau.addChild(texteCoords);
 
   stage.addChild(panneau);
+}
+
+// ── Rangée 2 : vrais <input> HTML pour Tracer / Aller, calés sur le canvas ──
+
+function creerChampNombre(valeur, largeur) {
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.value = String(valeur);
+  input.style.cssText = 'width:' + largeur + 'px;height:26px;padding:0 6px;border-radius:5px;' +
+    'border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.1);color:#fff;' +
+    'font:12px monospace;box-sizing:border-box;text-align:center;';
+  return input;
+}
+
+function creerBoutonHTML(label) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = label;
+  b.style.cssText = 'height:26px;padding:0 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);' +
+    'background:rgba(255,255,255,0.1);color:#fff;font:bold 12px monospace;cursor:pointer;box-sizing:border-box;';
+  b.addEventListener('mouseenter', () => { b.style.background = '#6aaf6a'; b.style.borderColor = '#6aaf6a'; });
+  b.addEventListener('mouseleave', () => { b.style.background = 'rgba(255,255,255,0.1)'; b.style.borderColor = 'rgba(255,255,255,0.2)'; });
+  return b;
+}
+
+function creerEtiquette(texte) {
+  const s = document.createElement('span');
+  s.textContent = texte;
+  s.style.cssText = 'color:rgba(255,255,255,0.6);font:11px monospace;';
+  return s;
+}
+
+function construireSaisiesHTML() {
+  const wrapper = canvas.parentElement;
+  if (!wrapper) return;
+  if (getComputedStyle(wrapper).position === 'static') wrapper.style.position = 'relative';
+
+  overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;display:flex;align-items:center;gap:6px;' +
+    'transform-origin:top left;z-index:6;';
+
+  const groupeTracer = document.createElement('div');
+  groupeTracer.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  champDistance = creerChampNombre(60, 56);
+  const boutonTracer = creerBoutonHTML('Tracer');
+  boutonTracer.addEventListener('click', () => {
+    modeAuto = false;
+    fileManuelle.push({ type: 'fwd', value: Number(champDistance.value) || 0 });
+  });
+  groupeTracer.appendChild(creerEtiquette('Dist'));
+  groupeTracer.appendChild(champDistance);
+  groupeTracer.appendChild(boutonTracer);
+
+  const separateur = document.createElement('div');
+  separateur.style.cssText = 'width:1px;height:20px;background:rgba(255,255,255,0.2);';
+
+  const groupeAller = document.createElement('div');
+  groupeAller.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  champX = creerChampNombre(0, 50);
+  champY = creerChampNombre(0, 50);
+  const boutonAller = creerBoutonHTML('Aller');
+  boutonAller.addEventListener('click', () => {
+    modeAuto = false;
+    fileManuelle.push({ type: 'goto', x: Number(champX.value) || 0, y: Number(champY.value) || 0 });
+  });
+  groupeAller.appendChild(creerEtiquette('X'));
+  groupeAller.appendChild(champX);
+  groupeAller.appendChild(creerEtiquette('Y'));
+  groupeAller.appendChild(champY);
+  groupeAller.appendChild(boutonAller);
+
+  overlay.appendChild(groupeTracer);
+  overlay.appendChild(separateur);
+  overlay.appendChild(groupeAller);
+
+  wrapper.appendChild(overlay);
+
+  positionnerSaisiesHTML();
+  if (typeof ResizeObserver !== 'undefined') {
+    observateur = new ResizeObserver(positionnerSaisiesHTML);
+    observateur.observe(canvas);
+  }
+  gestionnaireResize = positionnerSaisiesHTML;
+  window.addEventListener('resize', gestionnaireResize);
+}
+
+function positionnerSaisiesHTML() {
+  if (!overlay || !canvas.parentElement) return;
+  const rectCanvas = canvas.getBoundingClientRect();
+  const rectParent = canvas.parentElement.getBoundingClientRect();
+  const echelle = rectCanvas.width / canvas.width;
+  overlay.style.left = (rectCanvas.left - rectParent.left + 10 * echelle) + 'px';
+  overlay.style.top = (rectCanvas.top - rectParent.top + (HUD_TOP + RANGEE2_Y) * echelle) + 'px';
+  overlay.style.transform = 'scale(' + echelle + ')';
+}
+
+function nettoyerSaisiesHTML() {
+  if (observateur) { observateur.disconnect(); observateur = null; }
+  if (gestionnaireResize) { window.removeEventListener('resize', gestionnaireResize); gestionnaireResize = null; }
+  if (overlay && overlay.remove) { overlay.remove(); }
+  overlay = null;
 }
 
 function init() {
@@ -1282,8 +1378,17 @@ function init() {
     fileManuelle.push({ type: 'goto', x: evt.stageX - canvas.width / 2, y: canvas.height / 2 - evt.stageY });
   });
 
-  construirePanneau();
+  construirePanneauCreateJS();
+  construireSaisiesHTML();
   chargerMotif(0);
+}
+
+function destroy() {
+  if (canvas.__turtleStage) {
+    try { canvas.__turtleStage.enableDOMEvents(false); } catch (e) {}
+    canvas.__turtleStage = null;
+  }
+  nettoyerSaisiesHTML();
 }
 
 function update(dt) {
