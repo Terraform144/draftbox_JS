@@ -1014,5 +1014,286 @@ function draw(ctx) {
   if (gameOver) dessinerFin(ctx, false);
   if (victoire) dessinerFin(ctx, true);
 }`
+  },
+
+  {
+    name: 'Tortue Logo',
+    desc: 'Mini-interpréteur du langage Logo (1967) : la tortue enchaîne carré, triangle, hexagone, étoile, fleur et spirale toute seule. Touches 1-6 pour choisir un motif, ESPACE pour le rejouer.',
+    code: `// TORTUE LOGO — mini-interpréteur inspiré du langage Logo (1967)
+// Anime une tortue qui dessine des figures géométriques à partir de commandes textuelles.
+
+const ALIASES = {
+  AVANCE: 'fwd', AV: 'fwd', FORWARD: 'fwd', FD: 'fwd',
+  RECULE: 'bwd', RE: 'bwd', BACK: 'bwd', BK: 'bwd',
+  TOURNEDROITE: 'right', TD: 'right', RIGHT: 'right', RT: 'right',
+  TOURNEGAUCHE: 'left', TG: 'left', LEFT: 'left', LT: 'left',
+  LEVECRAYON: 'penup', LC: 'penup', PENUP: 'penup', PU: 'penup',
+  BAISSECRAYON: 'pendown', BC: 'pendown', PENDOWN: 'pendown', PD: 'pendown',
+  VIDEECRAN: 'clear', EFFACE: 'clear', VE: 'clear', CLEARSCREEN: 'clear', CS: 'clear',
+  ORIGINE: 'home', HOME: 'home',
+  COULEUR: 'color', COLOR: 'color',
+  EPAISSEUR: 'width', SETWIDTH: 'width',
+  CACHETORTUE: 'hideturtle', HIDETURTLE: 'hideturtle', HT: 'hideturtle',
+  MONTRETORTUE: 'showturtle', SHOWTURTLE: 'showturtle', ST: 'showturtle',
+  REPETE: 'repeat', REPEAT: 'repeat'
+};
+const NUMERIC = { fwd: 1, bwd: 1, right: 1, left: 1, width: 1 };
+const NOMS_COULEUR = { rouge: '#e94560', bleu: '#4ecdc4', vert: '#95e1d3', jaune: '#ffd700', orange: '#ff9a3c', violet: '#aa96da', blanc: '#eeeeee' };
+
+function tokenize(src) {
+  return src.replace(/\\[/g, ' [ ').replace(/\\]/g, ' ] ').split(/\\s+/).filter(Boolean);
+}
+
+function parse(tokens) {
+  let i = 0;
+  function bloc(dansCrochet) {
+    const noeuds = [];
+    while (i < tokens.length) {
+      const tok = tokens[i];
+      if (tok === ']') {
+        if (dansCrochet) { i++; return noeuds; }
+        throw new Error('crochet "]" inattendu');
+      }
+      const cle = ALIASES[tok.toUpperCase()];
+      if (!cle) throw new Error('commande inconnue : ' + tok);
+      i++;
+      if (cle === 'repeat') {
+        const n = parseInt(tokens[i], 10); i++;
+        if (tokens[i] !== '[') throw new Error('REPETE attend "["');
+        i++;
+        const corps = bloc(true);
+        noeuds.push({ type: 'repeat', count: Math.max(0, Math.min(2000, n || 0)), body: corps });
+      } else if (cle === 'color') {
+        noeuds.push({ type: 'color', value: tokens[i] }); i++;
+      } else if (NUMERIC[cle]) {
+        noeuds.push({ type: cle, value: parseFloat(tokens[i]) }); i++;
+      } else {
+        noeuds.push({ type: cle });
+      }
+    }
+    if (dansCrochet) throw new Error('crochet "]" manquant');
+    return noeuds;
+  }
+  return bloc(false);
+}
+
+function walk(noeuds) {
+  const out = [];
+  (function collecter(liste) {
+    for (const n of liste) {
+      if (n.type === 'repeat') for (let r = 0; r < n.count; r++) collecter(n.body);
+      else out.push(n);
+    }
+  })(noeuds);
+  return out;
+}
+
+function spiraleCode() {
+  const lignes = [];
+  for (let i = 1; i <= 22; i++) lignes.push('AV ' + (10 + i * 5) + ' TD 91');
+  return lignes.join(' ');
+}
+
+const MOTIFS = [
+  { nom: 'Carré', code: 'REPETE 4 [ AV 100 TD 90 ]', couleur: '#4ecdc4' },
+  { nom: 'Triangle', code: 'REPETE 3 [ AV 130 TD 120 ]', couleur: '#ffd700' },
+  { nom: 'Hexagone', code: 'REPETE 6 [ AV 90 TD 60 ]', couleur: '#e94560' },
+  { nom: 'Étoile', code: 'REPETE 5 [ AV 160 TD 144 ]', couleur: '#95e1d3' },
+  { nom: 'Fleur', code: 'REPETE 36 [ REPETE 4 [ AV 55 TD 90 ] TD 10 ]', couleur: '#ff9a3c' },
+  { nom: 'Spirale', code: spiraleCode(), legende: 'AV (croissant) TD 91 — répété 22 fois', couleur: '#aa96da' }
+];
+
+const VITESSE_AV = 260;
+const VITESSE_ROT = 260;
+const PAUSE_FIN = 1.6;
+
+let encre, encreCtx;
+let tortue;
+let file, fi, mouvement, motifActuel, termine, minuteur;
+let fileManuelle = [], mouvementManuel = null, modeAuto = true;
+
+function creerCommande(cmd) {
+  if (cmd.type === 'fwd' || cmd.type === 'bwd') {
+    const dist = cmd.type === 'bwd' ? -cmd.value : cmd.value;
+    const rad = tortue.cap * Math.PI / 180;
+    const x1 = tortue.x + Math.sin(rad) * dist, y1 = tortue.y + Math.cos(rad) * dist;
+    return { type: 'avance', x0: tortue.x, y0: tortue.y, x1, y1, total: Math.abs(dist), fait: 0, couleur: tortue.couleur, epaisseur: tortue.epaisseur, crayon: tortue.crayonBaisse };
+  }
+  if (cmd.type === 'right' || cmd.type === 'left') {
+    const delta = cmd.type === 'right' ? cmd.value : -cmd.value;
+    return { type: 'tourne', depart: tortue.cap, delta, fait: 0, total: Math.abs(delta) };
+  }
+  appliquerInstantane(cmd);
+  return null;
+}
+
+function appliquerInstantane(cmd) {
+  switch (cmd.type) {
+    case 'penup': tortue.crayonBaisse = false; break;
+    case 'pendown': tortue.crayonBaisse = true; break;
+    case 'clear': encreCtx.clearRect(0, 0, encre.width, encre.height); break;
+    case 'home': tortue.x = 0; tortue.y = 0; tortue.cap = 0; break;
+    case 'color': tortue.couleur = NOMS_COULEUR[String(cmd.value).toLowerCase()] || cmd.value; break;
+    case 'width': tortue.epaisseur = clamp(cmd.value, 1, 12); break;
+    case 'hideturtle': tortue.visible = false; break;
+    case 'showturtle': tortue.visible = true; break;
+  }
+}
+
+function avancerCommande(m, dt) {
+  if (m.type === 'avance') {
+    m.fait = Math.min(m.total, m.fait + VITESSE_AV * dt);
+    const t = m.total === 0 ? 1 : m.fait / m.total;
+    const nx = m.x0 + (m.x1 - m.x0) * t, ny = m.y0 + (m.y1 - m.y0) * t;
+    if (m.crayon) tracerSegment(tortue.x, tortue.y, nx, ny, m.couleur, m.epaisseur);
+    tortue.x = nx; tortue.y = ny;
+    return m.fait >= m.total;
+  }
+  m.fait = Math.min(m.total, m.fait + VITESSE_ROT * dt);
+  const t = m.total === 0 ? 1 : m.fait / m.total;
+  tortue.cap = m.depart + m.delta * t;
+  return m.fait >= m.total;
+}
+
+function creerCommandeManuelle(cmd) {
+  if (cmd.type === 'fwd') {
+    const rad = tortue.cap * Math.PI / 180;
+    const x1 = tortue.x + Math.sin(rad) * cmd.value, y1 = tortue.y + Math.cos(rad) * cmd.value;
+    return { type: 'avance', x0: tortue.x, y0: tortue.y, x1, y1, total: Math.abs(cmd.value), fait: 0, couleur: tortue.couleur, epaisseur: tortue.epaisseur, crayon: tortue.crayonBaisse };
+  }
+  return { type: 'avance', x0: tortue.x, y0: tortue.y, x1: cmd.x, y1: cmd.y, total: Math.hypot(cmd.x - tortue.x, cmd.y - tortue.y), fait: 0, couleur: tortue.couleur, epaisseur: tortue.epaisseur, crayon: tortue.crayonBaisse };
+}
+
+function versEcran(x, y) { return [canvas.width / 2 + x, canvas.height / 2 - y]; }
+
+function tracerSegment(x0, y0, x1, y1, couleur, epaisseur) {
+  const a = versEcran(x0, y0), b = versEcran(x1, y1);
+  encreCtx.strokeStyle = couleur; encreCtx.lineWidth = epaisseur;
+  encreCtx.lineCap = 'round'; encreCtx.lineJoin = 'round';
+  encreCtx.beginPath(); encreCtx.moveTo(a[0], a[1]); encreCtx.lineTo(b[0], b[1]); encreCtx.stroke();
+}
+
+function chargerMotif(index) {
+  motifActuel = ((index % MOTIFS.length) + MOTIFS.length) % MOTIFS.length;
+  const m = MOTIFS[motifActuel];
+  file = walk(parse(tokenize(m.code)));
+  fi = 0; mouvement = null; termine = false; minuteur = 0;
+  fileManuelle = []; mouvementManuel = null; modeAuto = true;
+  encreCtx.clearRect(0, 0, encre.width, encre.height);
+  tortue = { x: 0, y: 0, cap: 0, crayonBaisse: true, couleur: m.couleur, epaisseur: 3, visible: true };
+}
+
+function init() {
+  encre = document.createElement('canvas');
+  encre.width = canvas.width; encre.height = canvas.height;
+  encreCtx = encre.getContext('2d');
+  chargerMotif(0);
+}
+
+function update(dt) {
+  while (commands.length) {
+    const cmd = commands.shift();
+    if (cmd.type === 'shape') {
+      const idx = MOTIFS.findIndex(mo => mo.nom.toLowerCase() === String(cmd.name || '').toLowerCase());
+      if (idx >= 0) chargerMotif(idx);
+    } else if (cmd.type === 'avance') {
+      modeAuto = false;
+      fileManuelle.push({ type: 'fwd', value: Number(cmd.value) || 0 });
+    } else if (cmd.type === 'aller') {
+      modeAuto = false;
+      fileManuelle.push({ type: 'goto', x: Number(cmd.x) || 0, y: Number(cmd.y) || 0 });
+    } else if (cmd.type === 'penup') {
+      tortue.crayonBaisse = false;
+    } else if (cmd.type === 'pendown') {
+      tortue.crayonBaisse = true;
+    } else if (cmd.type === 'clear') {
+      encreCtx.clearRect(0, 0, encre.width, encre.height);
+      tortue.x = 0; tortue.y = 0; tortue.cap = 0;
+      fileManuelle = []; mouvementManuel = null;
+      modeAuto = false;
+    } else if (cmd.type === 'pause') {
+      modeAuto = false;
+    } else if (cmd.type === 'resume') {
+      modeAuto = true;
+    }
+  }
+
+  for (let k = 1; k <= 6; k++) {
+    const touche = 'Digit' + k;
+    if (keys[touche]) { keys[touche] = false; chargerMotif(k - 1); }
+  }
+  if (keys.Space) { keys.Space = false; chargerMotif(motifActuel); }
+
+  report({ x: Math.round(tortue.x), y: Math.round(tortue.y), cap: Math.round(((tortue.cap % 360) + 360) % 360), auto: modeAuto });
+
+  if (!mouvementManuel && fileManuelle.length) {
+    mouvementManuel = creerCommandeManuelle(fileManuelle.shift());
+  }
+  if (mouvementManuel) {
+    if (avancerCommande(mouvementManuel, dt)) mouvementManuel = null;
+    return;
+  }
+
+  // En mode manuel (après Tracer/Aller à), la démo reste en pause : elle
+  // n'enchaîne plus les motifs jusqu'à ce qu'on choisisse une forme.
+  if (!modeAuto) return;
+
+  if (termine) {
+    minuteur -= dt;
+    if (minuteur <= 0) chargerMotif(motifActuel + 1);
+    return;
+  }
+
+  while (!mouvement) {
+    if (fi >= file.length) { termine = true; minuteur = PAUSE_FIN; return; }
+    mouvement = creerCommande(file[fi++]);
+  }
+  if (avancerCommande(mouvement, dt)) mouvement = null;
+}
+
+function dessinerTortue(ctx) {
+  if (!tortue.visible) return;
+  const p = versEcran(tortue.x, tortue.y);
+  ctx.save();
+  ctx.translate(p[0], p[1]);
+  ctx.rotate(tortue.cap * Math.PI / 180);
+  ctx.beginPath();
+  ctx.moveTo(0, -14); ctx.lineTo(10, 11); ctx.lineTo(0, 5); ctx.lineTo(-10, 11); ctx.closePath();
+  ctx.fillStyle = '#4ecdc4'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -9, 2.6, 0, Math.PI * 2); ctx.fillStyle = '#ffd700'; ctx.fill();
+  ctx.restore();
+}
+
+function dessinerGrille(ctx) {
+  const pas = 60;
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = 0; x <= canvas.width; x += pas) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
+  for (let y = 0; y <= canvas.height; y += pas) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath();
+  ctx.moveTo(canvas.width / 2, 0); ctx.lineTo(canvas.width / 2, canvas.height);
+  ctx.moveTo(0, canvas.height / 2); ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.stroke();
+}
+
+function dessinerHUD(ctx) {
+  const m = MOTIFS[motifActuel];
+  ctx.fillStyle = '#8892b0'; ctx.font = 'bold 14px monospace';
+  ctx.fillText('TORTUE LOGO', 16, 26);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 20px monospace';
+  ctx.fillText(m.nom, 16, 52);
+  ctx.fillStyle = '#8892b0'; ctx.font = '13px monospace';
+  ctx.fillText(m.legende || m.code, 16, 74);
+}
+
+function draw(ctx) {
+  ctx.fillStyle = '#0a0a1a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  dessinerGrille(ctx);
+  ctx.drawImage(encre, 0, 0);
+  dessinerTortue(ctx);
+  dessinerHUD(ctx);
+}`
   }
 ];

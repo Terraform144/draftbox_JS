@@ -259,6 +259,74 @@ const angleY = (mouse.x / canvas.width - 0.5) * Math.PI * 2;</code></pre>
 </div>
 `;
 
+const turtleLogo = `
+<h1>Tortue Logo — Construire un Mini-Langage</h1>
+<p>En 1967, Seymour Papert invente <strong>Logo</strong> au MIT : un langage où l'on dirige une tortue avec des ordres tout simples — avancer, tourner, lever le crayon — pour lui faire dessiner des figures. C'est un excellent projet pour apprendre une technique très utile en dev de jeu : <strong>lire du texte et le transformer en actions</strong> (le même principe sert pour des dialogues scriptés, des cinématiques ou un système de modding).</p>
+
+<h2>Le langage</h2>
+<p>Le mini-Logo de cette démo comprend huit commandes :</p>
+<table>
+  <tr><th>Commande</th><th>Exemple</th><th>Effet</th></tr>
+  <tr><td><code>AVANCE n</code> / <code>AV n</code></td><td><code>AV 100</code></td><td>Avance de n pas</td></tr>
+  <tr><td><code>RECULE n</code> / <code>RE n</code></td><td><code>RE 50</code></td><td>Recule de n pas</td></tr>
+  <tr><td><code>TOURNEDROITE n</code> / <code>TD n</code></td><td><code>TD 90</code></td><td>Tourne à droite de n degrés</td></tr>
+  <tr><td><code>TOURNEGAUCHE n</code> / <code>TG n</code></td><td><code>TG 45</code></td><td>Tourne à gauche de n degrés</td></tr>
+  <tr><td><code>LEVECRAYON</code> / <code>LC</code></td><td><code>LC</code></td><td>Se déplacer sans dessiner</td></tr>
+  <tr><td><code>BAISSECRAYON</code> / <code>BC</code></td><td><code>BC</code></td><td>Recommencer à dessiner</td></tr>
+  <tr><td><code>COULEUR nom</code></td><td><code>COULEUR bleu</code></td><td>Change la couleur du trait</td></tr>
+  <tr><td><code>REPETE n [ ... ]</code></td><td><code>REPETE 4 [AV 100 TD 90]</code></td><td>Répète les instructions n fois</td></tr>
+</table>
+<div class="note">
+  <strong>Astuce géométrie :</strong> pour refermer un polygone à n côtés, il faut toujours tourner de 360 ÷ n degrés à chaque étape. C'est pour ça que <code>REPETE 6 [AV 90 TD 60]</code> dessine un hexagone parfait (360 ÷ 6 = 60).
+</div>
+
+<h2>Étape 1 — Découper le texte en mots (tokenize)</h2>
+<p>Avant d'interpréter quoi que ce soit, on sépare le programme en petits morceaux (des « tokens »). On ajoute des espaces autour des crochets pour qu'ils deviennent des tokens à part entière :</p>
+<pre><code>function tokenize(src) {
+  return src.replace(/\\[/g, ' [ ').replace(/\\]/g, ' ] ').split(/\\s+/).filter(Boolean);
+}
+
+tokenize('REPETE 4 [ AV 100 TD 90 ]');
+// -> ['REPETE', '4', '[', 'AV', '100', 'TD', '90', ']']</code></pre>
+
+<h2>Étape 2 — Transformer les tokens en instructions (parse)</h2>
+<p>On lit les tokens un par un. La plupart deviennent une instruction directe ; <code>REPETE</code> est spécial car il doit lire son crochet fermant et se répéter lui-même (récursion) :</p>
+<pre><code>if (cle === 'repeat') {
+  const n = parseInt(tokens[i], 10); i++;
+  if (tokens[i] !== '[') throw new Error('REPETE attend "["');
+  i++;
+  const corps = bloc(true); // ré-appelle la même fonction jusqu'au ']'
+  noeuds.push({ type: 'repeat', count: n, body: corps });
+}</code></pre>
+<p>Une erreur claire (crochet manquant, commande inconnue…) vaut toujours mieux qu'un plantage silencieux — c'est ce que fait <code>throw new Error(...)</code> ici.</p>
+
+<h2>Étape 3 — Faire avancer la tortue image par image</h2>
+<p>Comme toute animation DraftBox, on ne saute pas directement à la position finale : on avance un peu à chaque appel de <code>update(dt)</code>, en traçant le segment parcouru sur un calque d'encre séparé (un second <code>&lt;canvas&gt;</code> créé en mémoire) pour que le dessin reste affiché une fois le trait terminé :</p>
+<pre><code>function avancerCommande(m, dt) {
+  m.fait = Math.min(m.total, m.fait + VITESSE_AV * dt);
+  const t = m.fait / m.total;
+  const nx = m.x0 + (m.x1 - m.x0) * t, ny = m.y0 + (m.y1 - m.y0) * t;
+  if (m.crayon) tracerSegment(tortue.x, tortue.y, nx, ny, m.couleur, m.epaisseur);
+  tortue.x = nx; tortue.y = ny;
+  return m.fait >= m.total; // vrai quand le mouvement est terminé
+}</code></pre>
+
+<h2>Essayer la démo</h2>
+<p>La démo enchaîne toute seule six figures classiques — carré, triangle, hexagone, étoile, fleur et spirale — en dessinant chacune trait par trait. Une fois lancée dans la <strong>Scène</strong> :</p>
+<ul>
+  <li><strong>1 à 6</strong> — sauter directement à un motif</li>
+  <li><strong>ESPACE</strong> — rejouer le motif actuel depuis le début</li>
+</ul>
+
+<div style="text-align:center;margin:24px 0;">
+  <button class="demo-play-btn" data-demo="9" style="padding:12px 28px;font-size:16px;font-weight:bold;background:linear-gradient(135deg,#e94560,#c23152);color:white;border:none;border-radius:8px;cursor:pointer;">▶ Exécuter la démo</button>
+</div>
+
+<div class="note">
+  <strong>Pour aller plus loin :</strong> le code complet de la démo (les 8 commandes, la gestion des couleurs, <code>ORIGINE</code>, <code>VIDEECRAN</code>…) est visible dans l'éditeur de code une fois la démo lancée — copiez-le et modifiez les motifs dans <code>MOTIFS</code> pour créer les vôtres.
+</div>
+`;
+
 const sprites = `
 <h1>Sprites &amp; Images</h1>
 <p>Les sprites sont des images en pixel art que vous créez dans l'éditeur de sprites. Ils sont disponibles dans votre code via l'objet <code>sprites</code>.</p>
@@ -1154,7 +1222,7 @@ const demos = `
 ${Demos.map((demo, i) => `
 <div class="demo-card">
   <div class="demo-card-content">
-    <div class="demo-card-emoji">${['🕹️','🐍','👾','🧱','☄️','🏃','🎲','🎯'][i % 8]}</div>
+    <div class="demo-card-emoji">${['🕹️','🐍','👾','🧱','☄️','🏃','🎲','🎯','🚀','🐢'][i % 10]}</div>
     <h3>${demo.name}</h3>
     <p>${demo.desc}</p>
     <button class="demo-play-btn" data-demo="${i}">▶ Jouer à ${demo.name}</button>
@@ -1170,6 +1238,7 @@ export const sections = [
   { id: 'game-loop', title: 'Boucle de Jeu', content: gameLoop },
   { id: 'canvas-basics', title: 'Canvas 2D — Les Bases', content: canvasBasics },
   { id: 'canvas-3d', title: 'Canvas 3D — Les Bases', content: canvas3DBasics },
+  { id: 'turtle-logo', title: '🐢 Tortue Logo', content: turtleLogo },
   { id: 'sprites', title: 'Sprites & Images', content: sprites },
   { id: 'input', title: 'Gestion des Entrées', content: input },
   { id: 'collision', title: 'Détection de Collisions', content: collision },

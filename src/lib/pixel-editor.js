@@ -1,9 +1,12 @@
 const pixelEditor = {
   canvas: null,
   ctx: null,
-  pixelSize: 8,
+  pixelSizeX: 8,
+  pixelSizeY: 8,
   gridCols: 64,
   gridRows: 64,
+  minGridSize: 4,
+  maxGridSize: 128,
   isDrawing: false,
   currentTool: 'brush',
   currentColor: '#e94560',
@@ -20,12 +23,42 @@ const pixelEditor = {
   init(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
-    this.gridCols = canvas.width / this.pixelSize;
-    this.gridRows = canvas.height / this.pixelSize;
+    this.pixelSizeX = canvas.width / this.gridCols;
+    this.pixelSizeY = canvas.height / this.gridRows;
     this.initPixels();
     this.bindCanvasEvents();
     this.draw();
-    this.onStateChange && this.onStateChange({ sprites: { ...this.sprites }, undoAvailable: this.undoStack.length > 0 });
+    this.onStateChange && this.onStateChange({
+      sprites: { ...this.sprites },
+      undoAvailable: this.undoStack.length > 0,
+      resolution: { cols: this.gridCols, rows: this.gridRows }
+    });
+  },
+
+  setResolution(cols, rows) {
+    cols = Math.max(this.minGridSize, Math.min(this.maxGridSize, parseInt(cols, 10) || this.gridCols));
+    rows = Math.max(this.minGridSize, Math.min(this.maxGridSize, parseInt(rows, 10) || this.gridRows));
+    if (cols === this.gridCols && rows === this.gridRows) {
+      this.onStateChange && this.onStateChange({ resolution: { cols, rows } });
+      return;
+    }
+    this.cancelLine();
+    const oldPixels = this.pixels;
+    const oldCols = this.gridCols;
+    const oldRows = this.gridRows;
+    this.gridCols = cols;
+    this.gridRows = rows;
+    this.pixelSizeX = this.canvas.width / cols;
+    this.pixelSizeY = this.canvas.height / rows;
+    this.initPixels();
+    for (let y = 0; y < Math.min(oldRows, rows); y++) {
+      for (let x = 0; x < Math.min(oldCols, cols); x++) {
+        this.pixels[y][x] = oldPixels[y][x];
+      }
+    }
+    this.undoStack = [];
+    this.draw();
+    this.onStateChange && this.onStateChange({ undoAvailable: false, resolution: { cols, rows } });
   },
 
   destroy() {
@@ -44,6 +77,8 @@ const pixelEditor = {
 
   draw() {
     const ctx = this.ctx;
+    const psx = this.pixelSizeX;
+    const psy = this.pixelSizeY;
     ctx.fillStyle = '#0f0f23';
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -51,7 +86,7 @@ const pixelEditor = {
       for (let x = 0; x < this.gridCols; x++) {
         if (this.pixels[y] && this.pixels[y][x]) {
           ctx.fillStyle = this.pixels[y][x];
-          ctx.fillRect(x * this.pixelSize, y * this.pixelSize, this.pixelSize, this.pixelSize);
+          ctx.fillRect(x * psx, y * psy, psx, psy);
         }
       }
     }
@@ -65,7 +100,7 @@ const pixelEditor = {
       let err = dx + dy;
       let px = this.lineStart.x, py = this.lineStart.y;
       while (true) {
-        ctx.fillRect(px * this.pixelSize, py * this.pixelSize, this.pixelSize, this.pixelSize);
+        ctx.fillRect(px * psx, py * psy, psx, psy);
         if (px === this.lineEnd.x && py === this.lineEnd.y) break;
         const e2 = 2 * err;
         if (e2 >= dy) { err += dy; px += sx; }
@@ -78,14 +113,14 @@ const pixelEditor = {
       ctx.lineWidth = 1;
       for (let i = 0; i <= this.gridCols; i++) {
         ctx.beginPath();
-        ctx.moveTo(i * this.pixelSize, 0);
-        ctx.lineTo(i * this.pixelSize, this.canvas.height);
+        ctx.moveTo(i * psx, 0);
+        ctx.lineTo(i * psx, this.canvas.height);
         ctx.stroke();
       }
       for (let i = 0; i <= this.gridRows; i++) {
         ctx.beginPath();
-        ctx.moveTo(0, i * this.pixelSize);
-        ctx.lineTo(this.canvas.width, i * this.pixelSize);
+        ctx.moveTo(0, i * psy);
+        ctx.lineTo(this.canvas.width, i * psy);
         ctx.stroke();
       }
     }
@@ -97,8 +132,8 @@ const pixelEditor = {
     const scaleY = this.canvas.height / rect.height;
     const clientX = e.clientX !== undefined ? e.clientX : e.pageX;
     const clientY = e.clientY !== undefined ? e.clientY : e.pageY;
-    const x = Math.floor((clientX - rect.left) * scaleX / this.pixelSize);
-    const y = Math.floor((clientY - rect.top) * scaleY / this.pixelSize);
+    const x = Math.floor((clientX - rect.left) * scaleX / this.pixelSizeX);
+    const y = Math.floor((clientY - rect.top) * scaleY / this.pixelSizeY);
     return { x: Math.max(0, Math.min(x, this.gridCols - 1)), y: Math.max(0, Math.min(y, this.gridRows - 1)) };
   },
 
@@ -368,7 +403,9 @@ const pixelEditor = {
 
     const wheel = (e) => {
       e.preventDefault();
-      self.pixelSize = Math.max(2, Math.min(32, self.pixelSize + (e.deltaY > 0 ? -1 : 1)));
+      const delta = e.deltaY > 0 ? -1 : 1;
+      self.pixelSizeX = Math.max(2, Math.min(64, self.pixelSizeX + delta));
+      self.pixelSizeY = Math.max(2, Math.min(64, self.pixelSizeY + delta));
       self.draw();
     };
 
