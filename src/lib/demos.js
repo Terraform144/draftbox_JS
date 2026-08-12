@@ -1566,5 +1566,96 @@ function draw(ctx) {
   dessinerHUD(ctx);
   stage.update();
 }`
+  },
+
+  {
+    name: 'Chasse aux Fantômes',
+    desc: 'Un mini Pac-Man ! Flèches pour te déplacer, mange toutes les pièces sans te faire toucher par le fantôme. Espace pour rejouer. Construite avec de vrais blocs : ouvre le même jeu dans l’éditeur "Blocs" (bouton 👻 Fantômes) pour voir et modifier chaque bloc.',
+    code: `// Jeu créé avec l'éditeur de Blocs de DraftBox
+let joueur = { x: 450, y: 270, w: 28, h: 28, vitesse: 200 };
+let fantome = { x: 450, y: 90, w: 28, h: 28, vitesse: 110 };
+let pieces = [];
+let score = 0;
+let gameOver = false;
+let victoire = false;
+
+function init() {
+  score = 0;
+  gameOver = false;
+  victoire = false;
+  joueur.x = 450;
+  joueur.y = 270;
+  fantome.x = 450;
+  fantome.y = 90;
+  pieces = [];
+  for (let i = 0; i < 18; i++) {
+    pieces.push({ x: rand(40, 920), y: rand(40, 500), w: 14, h: 14, collected: false });
+  }
+}
+
+function update(dt) {
+  if ((gameOver || victoire)) {
+    if (keys.Space) {
+      init();
+    }
+  } else {
+    if (keys.ArrowLeft || keys.KeyA) joueur.x -= 200 * dt;
+    if (keys.ArrowRight || keys.KeyD) joueur.x += 200 * dt;
+    if (keys.ArrowUp || keys.KeyW) joueur.y -= 200 * dt;
+    if (keys.ArrowDown || keys.KeyS) joueur.y += 200 * dt;
+    joueur.x = clamp(joueur.x, 0, canvas.width - joueur.w);
+    joueur.y = clamp(joueur.y, 0, canvas.height - joueur.h);
+    fantome.x += (joueur.x > fantome.x ? 1 : -1) * fantome.vitesse * dt;
+    fantome.y += (joueur.y > fantome.y ? 1 : -1) * fantome.vitesse * dt;
+    fantome.x = clamp(fantome.x, 0, canvas.width - fantome.w);
+    fantome.y = clamp(fantome.y, 0, canvas.height - fantome.h);
+    for (const piece of pieces) {
+      if (!piece.collected) {
+        if (rectCollide(joueur, piece)) {
+          piece.collected = true;
+          score += 1;
+          audio("piece");
+        }
+      }
+    }
+    pieces = pieces.filter((it) => !it.collected);
+    if (rectCollide(joueur, fantome)) {
+      gameOver = true;
+      audio("perdu");
+    }
+    if ((pieces.length === 0)) {
+      victoire = true;
+      audio("victoire");
+    }
+  }
+}
+
+function draw(ctx) {
+  ctx.fillStyle = "#0a0a1a";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for (const piece of pieces) {
+    ctx.fillStyle = "#ffd24d";
+    ctx.beginPath();
+    ctx.arc(piece.x, piece.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#e94560";
+  ctx.fillRect(fantome.x, fantome.y, fantome.w, fantome.h);
+  ctx.fillStyle = "#ffd700";
+  ctx.fillRect(joueur.x, joueur.y, joueur.w, joueur.h);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "18px monospace";
+  ctx.fillText("Score : " + score, 16, 32);
+  if (gameOver) {
+    ctx.fillStyle = "#e94560";
+    ctx.font = "26px monospace";
+    ctx.fillText("💀 Perdu ! Espace pour rejouer", 170, 280);
+  }
+  if (victoire) {
+    ctx.fillStyle = "#ffd700";
+    ctx.font = "26px monospace";
+    ctx.fillText("🏆 Gagné ! Espace pour rejouer", 170, 280);
+  }
+}`
   }
 ];

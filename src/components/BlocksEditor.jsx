@@ -3,6 +3,7 @@ import { createBlock } from '../lib/blocks-defs';
 import { updateBlock, removeBlock, insertBlock, moveBlock } from '../lib/blocks-tree';
 import { generateCode } from '../lib/blocks-codegen';
 import { buildStarterProject } from '../lib/blocks-starter';
+import { buildPacmanProject } from '../lib/blocks-pacman';
 import BlockPalette from './blocks/BlockPalette';
 import BlockCanvas from './blocks/BlockCanvas';
 import VariablesPanel from './blocks/VariablesPanel';
@@ -66,13 +67,16 @@ export default function BlocksEditor({ show, onRunCode, onSendToCode }) {
 
   const hasAnyBlocks = scripts.init.length + scripts.update.length + scripts.draw.length > 0;
 
-  const loadStarterExample = useCallback(() => {
-    if (hasAnyBlocks && !window.confirm('Remplacer les blocs actuels par l\'exemple "Attrape-pièces" ?')) return;
-    const fresh = buildStarterProject();
+  const loadExample = useCallback((buildProject, label) => {
+    if (hasAnyBlocks && !window.confirm(`Remplacer les blocs actuels par l'exemple "${label}" ?`)) return;
+    const fresh = buildProject();
     setVariables(fresh.variables);
     setScripts(fresh.scripts);
     setActiveTarget(ROOT_TARGET);
   }, [hasAnyBlocks]);
+
+  const loadStarterExample = useCallback(() => loadExample(buildStarterProject, 'Attrape-pièces'), [loadExample]);
+  const loadPacmanExample = useCallback(() => loadExample(buildPacmanProject, 'Chasse aux Fantômes'), [loadExample]);
 
   const clearAll = useCallback(() => {
     if (!window.confirm('Tout effacer (variables et blocs) ?')) return;
@@ -86,7 +90,8 @@ export default function BlocksEditor({ show, onRunCode, onSendToCode }) {
       <div className="editor-header">
         <h2>🧩 Éditeur de Blocs</h2>
         <div className="code-controls blocks-header-controls">
-          <button className="blocks-btn blocks-btn-ghost" onClick={loadStarterExample} title="Charger un exemple qui fonctionne déjà">✨ Exemple</button>
+          <button className="blocks-btn blocks-btn-ghost" onClick={loadStarterExample} title="Charger un exemple qui fonctionne déjà">✨ Attrape-pièces</button>
+          <button className="blocks-btn blocks-btn-ghost" onClick={loadPacmanExample} title="Charger le mini Pac-Man, construit avec les mêmes blocs">👻 Fantômes</button>
           <button className="blocks-btn blocks-btn-ghost" onClick={clearAll} title="Tout effacer">🗑️ Effacer</button>
           <button className="blocks-btn blocks-btn-secondary" onClick={() => onSendToCode(generatedCode)} title="Voir/modifier le code dans l'éditeur de code">📤 Vers le code</button>
           <button className="blocks-btn blocks-btn-primary" onClick={() => onRunCode(generatedCode)} title="Lancer le jeu (Ctrl+Enter)">▶ Lancer</button>
