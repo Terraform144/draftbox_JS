@@ -16,6 +16,10 @@ export default function Sidebar({ currentTab, onSwitchTab }) {
           <span className="tab-icon">💻</span>
           <span className="tab-label">Code Editor</span>
         </button>
+        <button className={`tab-btn ${currentTab === 'blocks' ? 'active' : ''}`} data-tab="blocks" onClick={() => onSwitchTab('blocks')}>
+          <span className="tab-icon">🧩</span>
+          <span className="tab-label">Blocs</span>
+        </button>
         <button className={`tab-btn ${currentTab === 'scene' ? 'active' : ''}`} data-tab="scene" onClick={() => onSwitchTab('scene')}>
           <span className="tab-icon">🎬</span>
           <span className="tab-label">Scene</span>
