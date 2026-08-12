@@ -85,11 +85,11 @@ export default function BlocksEditor({ show, onRunCode, onSendToCode }) {
     <div className="tab-content blocks-editor-container" style={{ display: show ? 'flex' : 'none' }}>
       <div className="editor-header">
         <h2>🧩 Éditeur de Blocs</h2>
-        <div className="code-controls">
-          <button onClick={loadStarterExample} title="Charger un exemple qui fonctionne déjà">✨ Exemple</button>
-          <button onClick={clearAll} title="Tout effacer">🗑️ Effacer</button>
-          <button onClick={() => onSendToCode(generatedCode)} title="Voir/modifier le code dans l'éditeur de code">📤 Vers le code</button>
-          <button className="btn-run" onClick={() => onRunCode(generatedCode)} title="Lancer le jeu (Ctrl+Enter)">▶ Lancer</button>
+        <div className="code-controls blocks-header-controls">
+          <button className="blocks-btn blocks-btn-ghost" onClick={loadStarterExample} title="Charger un exemple qui fonctionne déjà">✨ Exemple</button>
+          <button className="blocks-btn blocks-btn-ghost" onClick={clearAll} title="Tout effacer">🗑️ Effacer</button>
+          <button className="blocks-btn blocks-btn-secondary" onClick={() => onSendToCode(generatedCode)} title="Voir/modifier le code dans l'éditeur de code">📤 Vers le code</button>
+          <button className="blocks-btn blocks-btn-primary" onClick={() => onRunCode(generatedCode)} title="Lancer le jeu (Ctrl+Enter)">▶ Lancer</button>
         </div>
       </div>
 
@@ -125,7 +125,7 @@ export default function BlocksEditor({ show, onRunCode, onSendToCode }) {
         </div>
 
         <div className="blocks-preview-col">
-          <h3>Code généré</h3>
+          <h3>💻 Ton code, en direct</h3>
           <pre className="blocks-code-preview">{generatedCode}</pre>
         </div>
       </div>

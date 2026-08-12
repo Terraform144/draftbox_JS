@@ -1,3 +1,5 @@
+import { playArcadeSound } from './arcade-sounds';
+
 const sceneRunner = {
   canvas: null,
   ctx: null,
@@ -127,6 +129,7 @@ const sceneRunner = {
       },
       audio(name) {
         try {
+          if (playArcadeSound(name)) return;
           const a = new Audio(name);
           a.play().catch(() => {});
         } catch (e) { }

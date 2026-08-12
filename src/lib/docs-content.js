@@ -664,12 +664,27 @@ function update(dt) {
 
 const audio = `
 <h1>Audio &amp; Son</h1>
-<p>Utilisez la fonction <code>audio(nom)</code> pour jouer des sons. DraftBox utilise l'API Web Audio pour la lecture audio.</p>
+<p>Utilisez la fonction <code>audio(nom)</code> pour jouer des sons. Aucun fichier à fournir : DraftBox inclut 10 sons d'arcade classiques, générés directement avec l'API Web Audio (comme dans les jeux 8-bit). Ils fonctionnent partout : dans l'aperçu du jeu, depuis l'onglet <strong>Blocs</strong> (bloc "jouer le son"), depuis l'onglet <strong>Code Editor</strong>, et même dans les jeux exportés en HTML.</p>
+
+<h2>Les 10 sons intégrés</h2>
+<table>
+  <tr><th>Nom</th><th>Effet</th><th>Utile pour</th></tr>
+  <tr><td><code>'piece'</code></td><td>🪙 Bref bling aigu</td><td>Ramasser une pièce ou un objet</td></tr>
+  <tr><td><code>'saut'</code></td><td>🦘 Note qui monte vite</td><td>Un saut</td></tr>
+  <tr><td><code>'tir'</code></td><td>🔫 Note qui descend vite</td><td>Tirer un laser</td></tr>
+  <tr><td><code>'explosion'</code></td><td>💥 Bruit sourd et grave</td><td>Un vaisseau ou un bloc qui explose</td></tr>
+  <tr><td><code>'degat'</code></td><td>💢 Bruit sec et court</td><td>Le joueur est touché</td></tr>
+  <tr><td><code>'bonus'</code></td><td>⭐ Quatre notes qui montent</td><td>Un bonus ramassé</td></tr>
+  <tr><td><code>'victoire'</code></td><td>🏆 Petite fanfare</td><td>Le joueur gagne</td></tr>
+  <tr><td><code>'perdu'</code></td><td>💀 Notes qui descendent</td><td>Game over</td></tr>
+  <tr><td><code>'clic'</code></td><td>🔘 Bip très court</td><td>Un menu, un bouton</td></tr>
+  <tr><td><code>'rebond'</code></td><td>🏓 Bip qui varie</td><td>Une balle qui rebondit (façon Pong)</td></tr>
+</table>
 
 <h2>Jouer des Sons</h2>
 <pre><code>function update(dt) {
   if (keys.Space) {
-    audio('saut'); // Joue le fichier son nommé 'saut'
+    audio('saut'); // joue le son intégré 'saut'
     joueur.vy = -400;
   }
 }
@@ -680,8 +695,12 @@ function collecterPiece() {
   score++;
 }</code></pre>
 
-<h2>Formats Supportés</h2>
-<p>Les navigateurs supportent ces formats audio :</p>
+<div class="note">
+  <strong>Dans l'onglet Blocs :</strong> le bloc <strong>🔊 Son → jouer le son</strong> propose directement ces 10 sons dans une liste déroulante — aucune faute de frappe possible !
+</div>
+
+<h2>Utiliser vos propres fichiers audio</h2>
+<p>Vous pouvez aussi jouer vos propres fichiers en donnant un chemin/URL au lieu d'un nom intégré, par exemple <code>audio('mes-sons/tada.mp3')</code>. Formats supportés par les navigateurs :</p>
 <ul>
   <li><strong>MP3</strong> (.mp3) — largement supporté</li>
   <li><strong>OGG</strong> (.ogg) — format ouvert, bonne qualité</li>
@@ -689,8 +708,8 @@ function collecterPiece() {
   <li><strong>M4A/AAC</strong> (.m4a) — bonne compression</li>
 </ul>
 
-<h2>Générer des Sons Programmétiquement</h2>
-<p>Vous pouvez créer des sons simples directement avec l'API Web Audio :</p>
+<h2>Générer d'autres Sons Programmétiquement</h2>
+<p>Pour aller plus loin que les 10 sons intégrés, vous pouvez créer vos propres sons avec l'API Web Audio :</p>
 
 <pre><code>function bip(freq = 440, duree = 0.1) {
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1233,7 +1252,7 @@ const apiRef = `
   <tr><td><code>rand(min, max)</code></td><td>Retourne un flottant aléatoire entre min et max (inclus).</td></tr>
   <tr><td><code>clamp(valeur, min, max)</code></td><td>Limite la valeur à l'intervalle [min, max].</td></tr>
   <tr><td><code>rectCollide(a, b)</code></td><td>Test de collision AABB. Les deux objets doivent avoir <code>{x, y, w, h}</code>. Retourne un booléen.</td></tr>
-  <tr><td><code>audio(nom)</code></td><td>Joue un fichier audio par nom/chemin.</td></tr>
+  <tr><td><code>audio(nom)</code></td><td>Joue un son. 10 sons d'arcade intégrés (<code>'piece'</code>, <code>'saut'</code>, <code>'tir'</code>, <code>'explosion'</code>, <code>'degat'</code>, <code>'bonus'</code>, <code>'victoire'</code>, <code>'perdu'</code>, <code>'clic'</code>, <code>'rebond'</code>) ou un chemin vers votre propre fichier audio. Voir la section Audio &amp; Son.</td></tr>
 </table>
 
 <h2>Contexte Canvas 2D (ctx)</h2>

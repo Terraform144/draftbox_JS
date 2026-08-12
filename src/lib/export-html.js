@@ -1,3 +1,5 @@
+import { ARCADE_AUDIO_SOURCE } from './arcade-sounds';
+
 export function generateStandaloneHTML(code, sprites) {
   const spriteData = {};
   for (const [name, canvas] of Object.entries(sprites)) {
@@ -191,17 +193,25 @@ ${spriteInitCode}
     return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
   }
 
+  var playArcadeSound = ${ARCADE_AUDIO_SOURCE};
+  function audio(name) {
+    try {
+      if (playArcadeSound(name)) return;
+      new Audio(name).play().catch(function() {});
+    } catch (e) {}
+  }
+
   var gameCode = ${JSON.stringify(code)};
 
   try {
     var gameFn = new Function(
-      'createjs', 'canvas', 'ctx', 'keys', 'mouse', 'sprites', 'rand', 'clamp', 'rectCollide',
+      'createjs', 'canvas', 'ctx', 'keys', 'mouse', 'sprites', 'rand', 'clamp', 'rectCollide', 'audio',
       gameCode + '\\n' +
       'return { init: typeof init !== "undefined" ? init : function(){}, ' +
       'update: typeof update !== "undefined" ? update : function(dt){}, ' +
       'draw: typeof draw !== "undefined" ? draw : function(ctx){} };'
     );
-    var game = gameFn(window.createjs, canvas, ctx, keys, mouse, sprites, rand, clamp, rectCollide);
+    var game = gameFn(window.createjs, canvas, ctx, keys, mouse, sprites, rand, clamp, rectCollide, audio);
 
     if (typeof game.init === 'function') game.init();
 

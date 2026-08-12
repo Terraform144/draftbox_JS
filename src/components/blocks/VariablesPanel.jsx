@@ -50,7 +50,7 @@ export default function VariablesPanel({ variables, onChange }) {
     <div className="blocks-variables">
       <div className="blocks-variables-header">
         <h3>📦 Variables du jeu</h3>
-        <button className="blocks-add-var-btn" onClick={addVariable}>+ Ajouter une variable</button>
+        <button className="blocks-add-var-btn" onClick={addVariable}>➕ Ajouter une variable</button>
       </div>
       <p className="blocks-hint">Ce sont les "boîtes" qui gardent en mémoire le joueur, le score, les pièces... Donne-leur un nom simple, sans espace.</p>
       <div className="blocks-variables-list">

@@ -113,7 +113,7 @@ export default function CodeEditor({ show, code, onCodeChange, onRun }) {
             </div>
             <div className="api-item">
               <code>audio(name)</code>
-              <span>Play a sound by name.</span>
+              <span>Play a sound. 10 built-in arcade sounds, no file needed: piece, saut, tir, explosion, degat, bonus, victoire, perdu, clic, rebond. See the Docs → Audio &amp; Son tab.</span>
             </div>
             <div className="api-item">
               <code>rand(min, max)</code>

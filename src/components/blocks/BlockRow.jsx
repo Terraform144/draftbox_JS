@@ -15,6 +15,12 @@ function renderField(name, fieldDef, value, onChange, varListId) {
       return <input key={name} type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} />;
     case 'varRef':
       return <input key={name} className="block-input" list={varListId} type="text" value={value} onChange={(e) => onChange(e.target.value)} />;
+    case 'select':
+      return (
+        <select key={name} className="block-input" value={value} onChange={(e) => onChange(e.target.value)}>
+          {(fieldDef.options || []).map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+        </select>
+      );
     case 'condition':
       return <ConditionEditor key={name} value={value} onChange={onChange} varListId={varListId} />;
     case 'text':

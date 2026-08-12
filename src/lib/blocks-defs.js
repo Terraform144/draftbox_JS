@@ -2,6 +2,7 @@
 // Chaque bloc décrit : sa catégorie, son libellé (avec des {champs} injectés
 // comme des widgets), et comment le traduire en code JavaScript.
 import { genUid } from './blocks-tree';
+import { ARCADE_SOUNDS } from './arcade-sounds';
 
 export const CATEGORIES = [
   { id: 'mouvement', label: 'Mouvement', icon: '🏃', color: '#4C97FF' },
@@ -231,8 +232,8 @@ export const BLOCK_DEFS = {
   // SON
   play_sound: {
     id: 'play_sound', category: 'son',
-    label: 'jouer le son "{nom}"',
-    fields: { nom: { type: 'text', default: 'coin' } },
+    label: 'jouer le son {nom}',
+    fields: { nom: { type: 'select', default: 'piece', options: ARCADE_SOUNDS.map((s) => ({ value: s.id, label: s.label })) } },
     gen: (f) => `audio(${JSON.stringify(f.nom)});`
   }
 };

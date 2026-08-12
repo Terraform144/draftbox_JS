@@ -12,6 +12,7 @@ export default function BlockPalette({ onAddBlock }) {
 
   return (
     <div className="blocks-palette">
+      <div className="blocks-palette-title">🧰 Choisis un bloc !</div>
       {CATEGORIES.map((cat) => (
         <div className="palette-category" key={cat.id}>
           <button
