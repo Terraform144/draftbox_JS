@@ -7,6 +7,8 @@ import { buildPacmanProject } from '../lib/events-pacman';
 import { buildBallProject } from '../lib/events-ball';
 import { buildPongProject } from '../lib/events-pong';
 import { buildInvadersProject } from '../lib/events-invaders';
+import { buildBreakoutProject } from '../lib/events-breakout';
+import { buildAsteroidsProject } from '../lib/events-asteroids';
 import EventSheet from './events/EventSheet';
 import ObjectsPanel from './events/ObjectsPanel';
 
@@ -126,6 +128,8 @@ export default function BlocksEditor({ show, onRunCode, onSendToCode }) {
           <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildBallProject, 'Pong')} title="Une balle qui rebondit sur une raquette">🏓 Rebond</button>
           <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildPongProject, 'Pong 2 joueurs')} title="Le vrai Pong à 2 joueurs (W/S et flèches)">🆚 Pong</button>
           <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildInvadersProject, 'Space Invaders')} title="Space Invaders en événements : grille d'aliens, tirs, scores">👾 Invaders</button>
+          <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildBreakoutProject, 'Casse-briques')} title="Breakout en événements : grille de briques, rebonds, vies">🧱 Casse-briques</button>
+          <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildAsteroidsProject, 'Astéroïdes')} title="Astéroïdes en événements : esquive, tirs, roches qui explosent">☄️ Astéroïdes</button>
           <button className="blocks-btn blocks-btn-ghost" onClick={clearAll} title="Tout effacer">🗑️ Effacer</button>
           <button className="blocks-btn blocks-btn-secondary" onClick={() => onSendToCode(generatedCode)} title="Voir/modifier le code généré dans l'éditeur de code">📤 Vers le code</button>
           <button className="blocks-btn blocks-btn-primary" onClick={() => onRunCode(generatedCode)} title="Lancer le jeu (Ctrl+Enter)">▶ Lancer</button>

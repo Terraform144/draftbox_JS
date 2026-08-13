@@ -62,6 +62,7 @@ export const DIRECTIONS = [
   { value: 'gauche', label: '← vers la gauche' },
   { value: 'haut', label: '↑ vers le haut' },
   { value: 'bas', label: '↓ vers le bas' },
+  { value: 'haut_aleatoire', label: '↗ vers le haut (angle au hasard)' },
   { value: 'hasard', label: '🎲 dans une direction au hasard' }
 ];
 
@@ -236,6 +237,7 @@ export const ACTION_DEFS = {
         case 'gauche': return `${f.a}.vx = -${v};\n${f.a}.vy = 0;`;
         case 'haut': return `${f.a}.vx = 0;\n${f.a}.vy = -${v};`;
         case 'bas': return `${f.a}.vx = 0;\n${f.a}.vy = ${v};`;
+        case 'haut_aleatoire': return `${f.a}.vy = -${v};\n${f.a}.vx = rand(-1, 1) * ${v} * 0.5;`;
         default: return `const __angle = rand(0, Math.PI * 2);\n${f.a}.vx = Math.cos(__angle) * ${v};\n${f.a}.vy = Math.sin(__angle) * ${v};`;
       }
     }
