@@ -9,7 +9,6 @@ import pixelEditor from './lib/pixel-editor';
 import demos from './lib/demos';
 
 const CodeEditor = lazy(() => import('./components/CodeEditor'));
-const BlocksEditor = lazy(() => import('./components/BlocksEditor'));
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('editor');
@@ -64,18 +63,6 @@ export default function App() {
     setCurrentTab('code');
   }, []);
 
-  const handleRunCode = useCallback((sourceCode) => {
-    setCode(sourceCode);
-    const sprites = pixelEditor.getAllSprites();
-    sceneRunner.run(sourceCode, sprites);
-    setCurrentTab('scene');
-  }, []);
-
-  const handleSendToEditor = useCallback((sourceCode) => {
-    setCode(sourceCode);
-    setCurrentTab('code');
-  }, []);
-
   useEffect(() => {
     window.__demoRunner = handleDemoRun;
     return () => { delete window.__demoRunner; };
@@ -110,9 +97,6 @@ export default function App() {
         <PixelEditor show={currentTab === 'editor'} />
         <Suspense fallback={null}>
           <CodeEditor show={currentTab === 'code'} code={code} onCodeChange={setCode} onRun={handleRun} />
-        </Suspense>
-        <Suspense fallback={null}>
-          <BlocksEditor show={currentTab === 'blocks'} onRunCode={handleRunCode} onSendToCode={handleSendToEditor} />
         </Suspense>
         <Scene show={currentTab === 'scene'} onRun={handleRun} />
         <Docs show={currentTab === 'docs'} onRun={handleDemoRun} onLoadSource={handleLoadSource} />

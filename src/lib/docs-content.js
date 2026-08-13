@@ -664,7 +664,7 @@ function update(dt) {
 
 const audio = `
 <h1>Audio &amp; Son</h1>
-<p>Utilisez la fonction <code>audio(nom)</code> pour jouer des sons. Aucun fichier à fournir : DraftBox inclut 10 sons d'arcade classiques, générés directement avec l'API Web Audio (comme dans les jeux 8-bit). Ils fonctionnent partout : dans l'aperçu du jeu, depuis l'onglet <strong>Blocs</strong> (bloc "jouer le son"), depuis l'onglet <strong>Code Editor</strong>, et même dans les jeux exportés en HTML.</p>
+<p>Utilisez la fonction <code>audio(nom)</code> pour jouer des sons. Aucun fichier à fournir : DraftBox inclut 10 sons d'arcade classiques, générés directement avec l'API Web Audio (comme dans les jeux 8-bit). Ils fonctionnent partout : dans l'aperçu du jeu, depuis l'onglet <strong>Code Editor</strong>, et même dans les jeux exportés en HTML.</p>
 
 <h2>Les 10 sons intégrés</h2>
 <table>
@@ -694,10 +694,6 @@ function collecterPiece() {
   audio('piece');
   score++;
 }</code></pre>
-
-<div class="note">
-  <strong>Dans l'onglet Blocs :</strong> le bloc <strong>🔊 Son → jouer le son</strong> propose directement ces 10 sons dans une liste déroulante — aucune faute de frappe possible !
-</div>
 
 <h2>Utiliser vos propres fichiers audio</h2>
 <p>Vous pouvez aussi jouer vos propres fichiers en donnant un chemin/URL au lieu d'un nom intégré, par exemple <code>audio('mes-sons/tada.mp3')</code>. Formats supportés par les navigateurs :</p>

@@ -1570,8 +1570,8 @@ function draw(ctx) {
 
   {
     name: 'Chasse aux Fantômes',
-    desc: 'Un mini Pac-Man ! Flèches pour te déplacer, mange toutes les pièces sans te faire toucher par le fantôme. Espace pour rejouer. Construite avec de vrais blocs : ouvre le même jeu dans l’éditeur "Blocs" (bouton 👻 Fantômes) pour voir et modifier chaque bloc.',
-    code: `// Jeu créé avec l'éditeur de Blocs de DraftBox
+    desc: 'Un mini Pac-Man ! Flèches pour te déplacer, mange toutes les pièces sans te faire toucher par le fantôme. Espace pour rejouer.',
+    code: `// Jeu d'exemple : Chasse aux Fantômes (mini Pac-Man)
 let joueur = { x: 450, y: 270, w: 28, h: 28, vitesse: 200 };
 let fantome = { x: 450, y: 90, w: 28, h: 28, vitesse: 110 };
 let pieces = [];
