@@ -1542,6 +1542,48 @@ html, body {
   overflow: hidden;
 }
 
+/* Colonnes repliables */
+.blocks-col { display: flex; flex-direction: column; }
+
+.blocks-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  text-align: left;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.blocks-col-head:hover { border-color: var(--accent); color: var(--accent); }
+.blocks-col-toggle { font-size: 11px; opacity: 0.75; }
+
+.blocks-col-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin-top: 10px;
+}
+
+.blocks-objects-col,
+.blocks-preview-col { overflow: hidden; }
+.blocks-objects-col .blocks-col-body,
+.blocks-preview-col .blocks-col-body { overflow-y: auto; }
+
+.blocks-objects-col.collapsed,
+.blocks-preview-col.collapsed { width: auto; min-width: 0; }
+
+.blocks-workspace-col.collapsed { flex: 0 0 auto; overflow: hidden; }
+
 .blocks-palette-col {
   width: 270px;
   min-width: 270px;
@@ -1991,7 +2033,8 @@ html, body {
 }
 
 /* Feuille d'événements */
-.events-workspace { overflow-y: auto; }
+.events-workspace { min-height: 0; }
+.events-workspace .blocks-col-body { overflow-y: auto; }
 .event-sheet { display: flex; flex-direction: column; gap: 14px; }
 
 .event-sheet-head {
@@ -2198,7 +2241,30 @@ html, body {
 .event-add-sub:hover { border-color: var(--accent); color: var(--accent); }
 .event-add-sub-ghost { opacity: 0.8; }
 
+/* ── Responsive de l'éditeur d'événements ── */
+@media (max-width: 1150px) {
+  .blocks-objects-col { width: 300px; min-width: 280px; }
+  .blocks-preview-col { width: 270px; min-width: 240px; }
+}
+
 @media (max-width: 900px) {
-  .blocks-editor-body { flex-direction: column; }
-  .blocks-objects-col, .blocks-palette-col, .blocks-preview-col { width: 100%; min-width: 0; max-height: 260px; }
+  .blocks-editor-body { flex-direction: column; overflow-y: auto; }
+  .blocks-objects-col, .blocks-palette-col, .blocks-preview-col {
+    width: 100%;
+    min-width: 0;
+    max-height: none;
+    padding: 10px;
+    border-right: none;
+    border-left: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .blocks-workspace-col { flex: none; }
+  .blocks-workspace-col .blocks-col-body { max-height: none; }
+  .blocks-col-head { font-size: 13px; padding: 10px 12px; }
+  .blocks-header-controls { flex-wrap: wrap; }
+  .blocks-header-controls .blocks-btn { flex: 1 1 auto; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .blocks-header-controls .blocks-btn { flex-basis: 100%; }
 }

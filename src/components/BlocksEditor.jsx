@@ -18,6 +18,11 @@ export default function BlocksEditor({ show, onRunCode, onSendToCode }) {
   const [variables, setVariables] = useState(starter.variables);
   const [events, setEvents] = useState(starter.events);
   const [picker, setPicker] = useState(null);
+  const [collapsed, setCollapsed] = useState({ objects: false, events: false, preview: false });
+
+  const toggleCol = useCallback((key) => {
+    setCollapsed((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   // ── Liste de noms proposés (objets + variables) pour les champs ──
   const names = useMemo(
@@ -124,37 +129,61 @@ export default function BlocksEditor({ show, onRunCode, onSendToCode }) {
       </div>
 
       <div className="blocks-editor-body">
-        <div className="blocks-objects-col">
-          <ObjectsPanel
-            objects={objects}
-            variables={variables}
-            onChangeObjects={setObjects}
-            onChangeVariables={setVariables}
-            listId={NAME_LIST_ID}
-          />
-          <div className="objects-bg">
-            <label className="block-text">Fond de l'écran :</label>
-            <input className="block-input block-input-color" type="color" value={bg} onChange={(e) => setBg(e.target.value)} />
-          </div>
+        <div className={`blocks-objects-col blocks-col${collapsed.objects ? ' collapsed' : ''}`}>
+          <button type="button" className="blocks-col-head" onClick={() => toggleCol('objects')} title={collapsed.objects ? 'Afficher les objets et variables' : 'Replier cette colonne'} aria-expanded={!collapsed.objects}>
+            <span>🟦 Objets &amp; Variables</span>
+            <span className="blocks-col-toggle">{collapsed.objects ? '◂' : '▾'}</span>
+          </button>
+          {!collapsed.objects && (
+            <div className="blocks-col-body">
+              <ObjectsPanel
+                objects={objects}
+                variables={variables}
+                onChangeObjects={setObjects}
+                onChangeVariables={setVariables}
+                listId={NAME_LIST_ID}
+              />
+              <div className="objects-bg">
+                <label className="block-text">Fond de l'écran :</label>
+                <input className="block-input block-input-color" type="color" value={bg} onChange={(e) => setBg(e.target.value)} />
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="blocks-workspace-col events-workspace">
-          <EventSheet
-            events={events}
-            ops={ops}
-            picker={picker}
-            setPicker={setPicker}
-            names={names}
-            listId={NAME_LIST_ID}
-          />
+        <div className={`blocks-workspace-col events-workspace blocks-col${collapsed.events ? ' collapsed' : ''}`}>
+          <button type="button" className="blocks-col-head" onClick={() => toggleCol('events')} title={collapsed.events ? 'Afficher les événements' : 'Replier cette colonne'} aria-expanded={!collapsed.events}>
+            <span>📜 Événements</span>
+            <span className="blocks-col-toggle">{collapsed.events ? '▸' : '▾'}</span>
+          </button>
+          {!collapsed.events && (
+            <div className="blocks-col-body">
+              <EventSheet
+                events={events}
+                ops={ops}
+                picker={picker}
+                setPicker={setPicker}
+                names={names}
+                listId={NAME_LIST_ID}
+              />
+            </div>
+          )}
         </div>
 
-        <div className="blocks-preview-col">
-          <h3>💻 Ton code, en direct</h3>
-          <p className="blocks-hint blocks-hint-small">
-            Chaque condition/action se traduit ici, ligne pour ligne. Aucune surprise : ce code est exactement celui qui tourne.
-          </p>
-          <pre className="blocks-code-preview">{generatedCode}</pre>
+        <div className={`blocks-preview-col blocks-col${collapsed.preview ? ' collapsed' : ''}`}>
+          <button type="button" className="blocks-col-head" onClick={() => toggleCol('preview')} title={collapsed.preview ? 'Afficher le code' : 'Replier cette colonne'} aria-expanded={!collapsed.preview}>
+            <span>💻 Code en direct</span>
+            <span className="blocks-col-toggle">{collapsed.preview ? '◂' : '▾'}</span>
+          </button>
+          {!collapsed.preview && (
+            <div className="blocks-col-body">
+              <h3>Ton code, en direct</h3>
+              <p className="blocks-hint blocks-hint-small">
+                Chaque condition/action se traduit ici, ligne pour ligne. Aucune surprise : ce code est exactement celui qui tourne.
+              </p>
+              <pre className="blocks-code-preview">{generatedCode}</pre>
+            </div>
+          )}
         </div>
       </div>
 
