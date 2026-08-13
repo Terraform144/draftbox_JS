@@ -367,6 +367,24 @@ export const ACTION_DEFS = {
     fields: { liste: { type: 'listRef', default: 'pieces' } },
     gen: (f) => `${f.liste} = ${f.liste}.filter((it) => !it.collected);`
   },
+  spawn_rect: {
+    id: 'spawn_rect', category: 'listes', icon: '🧱',
+    label: 'créer une plateforme x {x} y {y} w {w} h {h} dans {liste}',
+    fields: {
+      liste: { type: 'listRef', default: 'plateformes' },
+      x: { type: 'text', default: '0' },
+      y: { type: 'text', default: '500' },
+      w: { type: 'number', default: 120 },
+      h: { type: 'number', default: 20 }
+    },
+    gen: (f) => `${f.liste}.push({ x: ${f.x}, y: ${f.y}, w: ${Number(f.w) || 20}, h: ${Number(f.h) || 20}, vx: 0, vy: 0, collected: false });`
+  },
+  remove_last: {
+    id: 'remove_last', category: 'listes', icon: '🐍',
+    label: 'retirer le dernier élément de {liste}',
+    fields: { liste: { type: 'listRef', default: 'serpent' } },
+    gen: (f) => `${f.liste}.pop();`
+  },
   play_sound: {
     id: 'play_sound', category: 'son', icon: '🔊',
     label: 'jouer le son {nom}',
