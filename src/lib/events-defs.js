@@ -65,6 +65,13 @@ export const DIRECTIONS = [
   { value: 'hasard', label: '🎲 dans une direction au hasard' }
 ];
 
+export const MOVE_DIRS = [
+  { value: 'droite', label: '→ vers la droite' },
+  { value: 'gauche', label: '← vers la gauche' },
+  { value: 'haut', label: '↑ vers le haut' },
+  { value: 'bas', label: '↓ vers le bas' }
+];
+
 // ── Définitions des conditions ──
 export const CONDITION_DEFS = {
   start: {
@@ -91,6 +98,12 @@ export const CONDITION_DEFS = {
     label: '{a} touche un bord de l\'écran',
     fields: { a: { type: 'varRef', default: 'balle' } },
     gen: (f) => `(${f.a}.x <= 0 || ${f.a}.x + (${f.a}.w || 0) >= canvas.width || ${f.a}.y <= 0 || ${f.a}.y + (${f.a}.h || 0) >= canvas.height)`
+  },
+  touch_list: {
+    id: 'touch_list', category: 'detection', icon: '💥',
+    label: '{a} touche un élément de {liste}',
+    fields: { a: { type: 'varRef', default: 'balle' }, liste: { type: 'listRef', default: 'aliens' } },
+    gen: (f) => `(${f.liste}.some((__it) => rectCollide(${f.a}, __it)))`
   },
   mouse_clicked: {
     id: 'mouse_clicked', category: 'detection', icon: '🖱️',
@@ -156,6 +169,26 @@ export const ACTION_DEFS = {
       return lines.join('\n');
     }
   },
+  move_dir: {
+    id: 'move_dir', category: 'mouvement', icon: '🕹️',
+    label: 'tant que {key} appuyée, déplacer {a} vers {direction} à {v} px/s',
+    fields: {
+      a: { type: 'varRef', default: 'joueur' },
+      key: { type: 'key', default: 'ArrowUp' },
+      direction: { type: 'select', default: 'haut', options: MOVE_DIRS },
+      v: { type: 'text', default: '300' }
+    },
+    gen: (f) => {
+      const v = `(${f.v})`;
+      switch (f.direction) {
+        case 'droite': return `if (keys.${f.key}) ${f.a}.x += ${v} * dt;`;
+        case 'gauche': return `if (keys.${f.key}) ${f.a}.x -= ${v} * dt;`;
+        case 'haut': return `if (keys.${f.key}) ${f.a}.y -= ${v} * dt;`;
+        case 'bas': return `if (keys.${f.key}) ${f.a}.y += ${v} * dt;`;
+        default: return '';
+      }
+    }
+  },
   keep_screen: {
     id: 'keep_screen', category: 'mouvement', icon: '📐',
     label: 'garder {a} dans l\'écran',
@@ -206,6 +239,22 @@ export const ACTION_DEFS = {
         default: return `const __angle = rand(0, Math.PI * 2);\n${f.a}.vx = Math.cos(__angle) * ${v};\n${f.a}.vy = Math.sin(__angle) * ${v};`;
       }
     }
+  },
+  set_velocity: {
+    id: 'set_velocity', category: 'mouvement', icon: '🚀',
+    label: 'donner à {a} une vitesse x {dx} y {dy}',
+    fields: {
+      a: { type: 'varRef', default: 'balle' },
+      dx: { type: 'text', default: '0' },
+      dy: { type: 'text', default: '-300' }
+    },
+    gen: (f) => `${f.a}.vx = ${f.dx};\n${f.a}.vy = ${f.dy};`
+  },
+  wrap: {
+    id: 'wrap', category: 'mouvement', icon: '🔁',
+    label: 'réapparaître {a} de l\'autre côté de l\'écran',
+    fields: { a: { type: 'varRef', default: 'vaisseau' } },
+    gen: (f) => `if (${f.a}.x + (${f.a}.w || 0) < 0) ${f.a}.x = canvas.width;\nif (${f.a}.x > canvas.width) ${f.a}.x = -(${f.a}.w || 0);\nif (${f.a}.y + (${f.a}.h || 0) < 0) ${f.a}.y = canvas.height;\nif (${f.a}.y > canvas.height) ${f.a}.y = -(${f.a}.h || 0);`
   },
   bounce_edges: {
     id: 'bounce_edges', category: 'mouvement', icon: '↕️',
@@ -262,7 +311,52 @@ export const ACTION_DEFS = {
     gen: (f, lib) => {
       const meta = lib.listMeta(f.liste);
       const t = (meta && meta.taille) || 14;
-      return `for (let i = 0; i < ${Number(f.n) || 0}; i++) {\n  ${f.liste}.push({ x: rand(40, canvas.width - 40), y: rand(40, canvas.height - 40), w: ${t}, h: ${t}, collected: false });\n}`
+      return `for (let i = 0; i < ${Number(f.n) || 0}; i++) {\n  ${f.liste}.push({ x: rand(40, canvas.width - 40), y: rand(40, canvas.height - 40), w: ${t}, h: ${t}, vx: 0, vy: 0, collected: false });\n}`
+    }
+  },
+  spawn_at: {
+    id: 'spawn_at', category: 'listes', icon: '📍',
+    label: 'créer une pièce à x {x} y {y} dans {liste}',
+    fields: {
+      x: { type: 'text', default: 'joueur.x' },
+      y: { type: 'text', default: 'joueur.y' },
+      liste: { type: 'listRef', default: 'pieces' }
+    },
+    gen: (f, lib) => {
+      const meta = lib.listMeta(f.liste);
+      const t = (meta && meta.taille) || 14;
+      return `${f.liste}.push({ x: ${f.x}, y: ${f.y}, w: ${t}, h: ${t}, vx: 0, vy: 0, collected: false });`
+    }
+  },
+  spawn_grid: {
+    id: 'spawn_grid', category: 'listes', icon: '🔲',
+    label: 'créer une grille de {lignes}×{colonnes} dans {liste}',
+    fields: {
+      liste: { type: 'listRef', default: 'briques' },
+      lignes: { type: 'number', default: 5 },
+      colonnes: { type: 'number', default: 10 },
+      x: { type: 'text', default: '12' },
+      y: { type: 'text', default: '30' },
+      w: { type: 'number', default: 80 },
+      h: { type: 'number', default: 26 }
+    },
+    gen: (f, lib) => {
+      const meta = lib.listMeta(f.liste);
+      const t = (meta && meta.taille) || 14;
+      const w = Number(f.w) || t;
+      const h = Number(f.h) || t;
+      const n = `${f.liste}`;
+      return `{
+  let __gx = ${f.x}, __gy = ${f.y};
+  for (let __r = 0; __r < ${Number(f.lignes) || 0}; __r++) {
+    for (let __c = 0; __c < ${Number(f.colonnes) || 0}; __c++) {
+      ${n}.push({ x: __gx, y: __gy, w: ${w}, h: ${h}, vx: 0, vy: 0, collected: false });
+      __gx += ${w} + 8;
+    }
+    __gx = ${f.x};
+    __gy += ${h} + 8;
+  }
+}`
     }
   },
   remove_flagged: {

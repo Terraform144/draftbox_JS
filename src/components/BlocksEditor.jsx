@@ -5,6 +5,8 @@ import { generateCode } from '../lib/events-codegen';
 import { buildStarterProject } from '../lib/events-starter';
 import { buildPacmanProject } from '../lib/events-pacman';
 import { buildBallProject } from '../lib/events-ball';
+import { buildPongProject } from '../lib/events-pong';
+import { buildInvadersProject } from '../lib/events-invaders';
 import EventSheet from './events/EventSheet';
 import ObjectsPanel from './events/ObjectsPanel';
 
@@ -122,6 +124,8 @@ export default function BlocksEditor({ show, onRunCode, onSendToCode }) {
           <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildStarterProject, 'Attrape-pièces')} title="Charger un exemple qui fonctionne déjà">✨ Attrape-pièces</button>
           <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildPacmanProject, 'Chasse aux Fantômes')} title="Le mini Pac-Man, en événements">👻 Fantômes</button>
           <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildBallProject, 'Pong')} title="Une balle qui rebondit sur une raquette">🏓 Rebond</button>
+          <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildPongProject, 'Pong 2 joueurs')} title="Le vrai Pong à 2 joueurs (W/S et flèches)">🆚 Pong</button>
+          <button className="blocks-btn blocks-btn-ghost" onClick={() => loadProject(buildInvadersProject, 'Space Invaders')} title="Space Invaders en événements : grille d'aliens, tirs, scores">👾 Invaders</button>
           <button className="blocks-btn blocks-btn-ghost" onClick={clearAll} title="Tout effacer">🗑️ Effacer</button>
           <button className="blocks-btn blocks-btn-secondary" onClick={() => onSendToCode(generatedCode)} title="Voir/modifier le code généré dans l'éditeur de code">📤 Vers le code</button>
           <button className="blocks-btn blocks-btn-primary" onClick={() => onRunCode(generatedCode)} title="Lancer le jeu (Ctrl+Enter)">▶ Lancer</button>
